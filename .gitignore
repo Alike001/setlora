@@ -1,0 +1,11 @@
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+contracts/lib/
+.env
+.env.*
+*.key
+
+contracts/out/
+contracts/cache/
+contracts/broadcast/
