@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0B1724" />
+  <meta name="description" content="Setlora — invoice-aware, verifiable batch payments on Portaldot V3" />
+  <title>Setlora — One batch. Every payment accounted for.</title>
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Setlora home"><span class="brand-mark">S<span>✓</span></span><span>setlora</span></a>
+      <div class="right-head"><span class="network-chip"><span class="network-light"></span>PORTALDOT V3 TESTNET</span><button class="button secondary" id="connect">Connect wallet</button></div>
+    </header>
+    <main>
+      <section class="intro">
+        <div><div class="eyebrow">INVOICE-AWARE PAYMENTS</div><h1>One batch.<br/><em>Every payment accounted for.</em></h1><p>Prepare contractor payouts, verify recipients and invoice numbers, then authorize one onchain settlement. Your wallet stays in control.</p></div>
+        <div class="intro-panel"><span>HOW IT WORKS</span><div><b>01</b> Prepare invoices</div><div><b>02</b> Review onchain status</div><div><b>03</b> Approve & settle</div><div><b>04</b> Verify the receipt</div></div>
+      </section>
+      <section class="status-bar" id="network-status" aria-live="polite">Checking network configuration…</section>
+      <section class="workspace">
+        <div class="panel editor">
+          <div class="panel-head"><div><div class="eyebrow">01 / PAYMENT BATCH</div><h2>Prepare invoices</h2><p>Up to 10 recipients per batch. Each invoice number must be unique for the paying account.</p></div><div class="head-actions"><label class="button subtle file-button">Import CSV<input type="file" id="csvfile" accept=".csv,text/csv" hidden></label><button class="button subtle" id="add">+ Add invoice</button></div></div>
+          <div class="table-wrap"><table><thead><tr><th>Invoice #</th><th>Recipient address</th><th>Amount (pUSD)</th><th>Note (optional)</th><th></th></tr></thead><tbody id="invoice-rows"></tbody></table></div>
+          <div class="editor-footer"><span>Example CSV: invoice,recipient,amount,note</span><button class="button primary" id="review">Review batch <span>↗</span></button></div>
+        </div>
+        <aside class="panel summary">
+          <div class="eyebrow">02 / SETTLEMENT</div><h2>Batch summary</h2>
+          <div class="metric"><span>Invoices</span><strong id="count">0</strong></div>
+          <div class="metric"><span>Estimated total</span><strong id="total">0.00 <small>pUSD</small></strong></div>
+          <div class="metric"><span>Token balance</span><strong id="balance">—</strong></div>
+          <div class="metric"><span>Approved allowance</span><strong id="allowance">—</strong></div>
+          <div class="divider"></div><div id="review-status" class="message muted">Enter invoices, connect a wallet, then review. Nothing will be signed automatically.</div>
+          <button class="button secondary wide" id="approve" disabled>Approve exact amount</button>
+          <button class="button primary wide" id="settle" disabled>Settle batch</button>
+          <div class="small-note">Approval and settlement are separate wallet transactions. You must confirm each one.</div>
+        </aside>
+      </section>
+      <section class="panel audit"><div class="panel-head"><div><div class="eyebrow">03 / VERIFICATION</div><h2>Transaction evidence</h2><p>We show confirmed only after checking the receipt, emitted invoice events, and stored settlement flags.</p></div><button class="button subtle" id="check-tx">Check last transaction</button></div><div id="transaction-status" class="message muted">No transaction submitted from this browser yet.</div><div class="evidence" id="evidence"></div></section>
+      <footer><span>Built for Portaldot Hacker House 2026 · Testnet only</span><span>No private keys or funds are held by Setlora.</span></footer>
+    </main>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

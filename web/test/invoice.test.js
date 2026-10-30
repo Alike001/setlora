@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { parseUnitsExact, validateInvoices, matchesSettlementEvents } from '../src/invoice.js';
+const alice='0x'+'a'.repeat(40), bob='0x'+'b'.repeat(40);
+const validAddress = v => /^0x[0-9a-fA-F]{40}$/.test(v);
+const good=[{invoice:'1',recipient:alice,amount:'1.5'},{invoice:'2',recipient:bob,amount:'0.000001'}];
+test('exact integer token amounts',()=>assert.equal(parseUnitsExact('1.000001'),1000001n));
+test('reject decimal precision beyond token',()=>assert.throws(()=>parseUnitsExact('0.0000001'),/decimal/));
+test('valid batch has correct total',()=>assert.equal(validateInvoices(good,validAddress).total,1500001n));
+test('reject canonical invoice duplicates',()=>assert.throws(()=>validateInvoices([{...good[0],invoice:'01'},good[0]],validAddress),/repeated/));
+test('reject invalid recipient',()=>assert.throws(()=>validateInvoices([{...good[0],recipient:'0xdead'}],validAddress),/invalid recipient/));
+test('reject zero payment',()=>assert.throws(()=>validateInvoices([{...good[0],amount:'0'}],validAddress),/positive/));
+test('reject more than ten invoices',()=>assert.throws(()=>validateInvoices(Array.from({length:11},(_,i)=>({...good[0],invoice:String(i+1)})),validAddress),/10 invoices/));
+test('verify settlement events match recipient, amount and payer',()=>{
+ const payer='0x'+'c'.repeat(40); const batch=validateInvoices(good,validAddress);
+ const events=batch.items.map(x=>({payer,invoice:x.invoice,recipient:x.recipient,amount:x.amount}));
+ assert.equal(matchesSettlementEvents(events,payer,batch.items),true);
+ assert.equal(matchesSettlementEvents([{...events[0],amount:5n},events[1]],payer,batch.items),false);
+ assert.equal(matchesSettlementEvents(events,'0x'+'d'.repeat(40),batch.items),false);
+});

@@ -9,3 +9,8 @@ contracts/lib/
 contracts/out/
 contracts/cache/
 contracts/broadcast/
+
+web/node_modules/
+web/dist/
+web/.env
+web/.env.local
