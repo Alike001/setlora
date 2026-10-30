@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {isUnresolved, makeVerifiedReceipt} from '../src/status.js';
+const addr = '0x' + 'a'.repeat(40);
+const hash = '0x' + '1'.repeat(64);
+const good = {hash, payer:addr, status:'confirmed', items:[{invoice:'12',recipient:addr,amount:'25000000'}],chainId:'420420777',contract:addr};
+test('Unknown and mismatched receipts prevent retry',()=>{assert.equal(isUnresolved({status:'unknown'}),true);assert.equal(isUnresolved({status:'mismatch'}),true);assert.equal(isUnresolved({status:'confirmed'}),false);assert.equal(isUnresolved(null),false);});
+test('Export requires fully confirmed status',()=>assert.throws(()=>makeVerifiedReceipt({...good,status:'unknown'},420420777n,addr),/confirmed/));
+test('Export forbids wrong chain or contract',()=>{assert.throws(()=>makeVerifiedReceipt({...good,chainId:'1'},420420777n,addr),/network/);assert.throws(()=>makeVerifiedReceipt({...good,contract:'0x'+'b'.repeat(40)},420420777n,addr),/contract/);});
+test('Verified receipt preserves integer base units and payer',()=>{const r=makeVerifiedReceipt(good,420420777n,addr);assert.equal(r.invoices[0].amountBaseUnits,'25000000');assert.equal(r.transactionHash,hash);assert.equal(r.payer,addr);});

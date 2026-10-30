@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f7faf8" />
+  <meta name="description" content="Setlora payment workspace: prepare invoice-linked batches, review wallet approval, and verify Portaldot V3 settlement." />
+  <title>Payment workspace · Setlora</title>
+  <link rel="icon" type="image/svg+xml" href="/setlora-icon.svg" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="/" aria-label="Setlora home"><span class="brand-mark">S<span>✓</span></span><span>setlora</span></a>
+        <nav class="app-nav" aria-label="Workspace navigation"><a href="/" class="back-link">← Back to home</a><span class="nav-divider">/</span><strong>Payment workspace</strong></nav>
+        <div class="right-head"><span class="network-chip"><span class="network-light"></span> PORTALDOT V3 TESTNET</span><button class="button secondary" id="connect">Connect wallet</button></div>
+      </div>
+    </header>
+    <main>
+      <section class="page-intro">
+        <div><div class="eyebrow">PAYMENTS / NEW BATCH</div><h1>Pay your people, <span>with confidence.</span></h1><p>Build a batch, check the details, and approve only when you are ready. Your wallet stays in your control.</p></div>
+        <div class="page-intro-aside"><span class="aside-label">SETTLEMENT MODEL</span><strong>All or nothing</strong><span>If any transfer fails, the entire batch reverts.</span></div>
+      </section>
+      <div class="preview-note" role="note"><span class="preview-note-icon">i</span><div><strong>Testnet preview</strong><span id="network-status" class="network-message" aria-live="polite">Checking contract configuration…</span></div></div>
+      <div class="steps-nav" aria-label="Payment steps"><div><span>1</span><strong>Prepare invoices</strong></div><i></i><div><span>2</span><strong>Review & approve</strong></div><i></i><div><span>3</span><strong>Settle & verify</strong></div></div>
+      <section class="workspace">
+        <div class="panel editor">
+          <div class="panel-head"><div><div class="eyebrow">STEP 01 · CREATE BATCH</div><h2>Who are you paying?</h2><p>Enter up to 10 invoices. Keep recipient addresses and amounts precise.</p></div><div class="head-actions"><label class="button subtle file-button">Import CSV<input type="file" id="csvfile" accept=".csv,text/csv" hidden></label><button class="button subtle" id="add">+ Add recipient</button></div></div>
+          <div class="editor-toolbar"><span>Invoice numbers must be unique for your wallet.</span><button id="download-template" type="button" class="text-button">Download CSV template ↓</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Invoice #</th><th>Recipient address</th><th>Amount (pUSD)</th><th>Note (optional)</th><th></th></tr></thead><tbody id="invoice-rows"></tbody></table></div>
+          <div class="editor-footer"><span>Nothing will be sent when you click Review.</span><button class="button primary" id="review">Review batch →</button></div>
+        </div>
+        <aside class="panel summary">
+          <div class="eyebrow">STEP 02 · REVIEW</div><h2>Payment summary</h2>
+          <div class="metric"><span>Invoices</span><strong id="count">1</strong></div>
+          <div class="metric"><span>Batch total</span><strong id="total">— <small>pUSD</small></strong></div>
+          <div class="metric"><span>Available pUSD</span><strong id="balance">—</strong></div>
+          <div class="metric"><span>Token allowance</span><strong id="allowance">—</strong></div>
+          <div class="divider"></div>
+          <div id="review-status" class="message muted" role="status" aria-live="polite">Fill in the invoices. Then review them before doing anything with your wallet.</div>
+          <div id="review-items" class="review-items" aria-live="polite"></div>
+          <button class="button secondary wide" id="approve" disabled>1. Approve exact token amount</button>
+          <button class="button primary wide" id="settle" disabled>2. Confirm batch settlement</button>
+          <div class="small-note">Two separate wallet confirmations. Setlora never signs for you, and approval alone does not pay anyone.</div>
+        </aside>
+      </section>
+      <section class="panel audit" id="verification"><div class="panel-head"><div><div class="eyebrow">STEP 03 · PROOF</div><h2>Settlement evidence</h2><p>Confirmed means the blockchain receipt, invoice events and settlement flags all match.</p></div><button class="button subtle" id="check-tx" disabled>Recheck last transaction ↻</button></div><div id="transaction-status" class="message muted" role="status" aria-live="polite">No transaction has been submitted from this browser.</div><div class="evidence" id="evidence"></div><div class="verification-footer"><span>Receipts are checked against the configured Setlora contract.</span><button class="text-button" id="export-receipt" disabled>Export verified JSON receipt ↓</button></div></section>
+      <section class="assurance"><div><span>◎</span><strong>Your wallet, your approval</strong><p>Setlora doesn't hold your signing keys.</p></div><div><span>⧉</span><strong>Invoices tracked onchain</strong><p>Prevents replay through this contract for the payer.</p></div><div><span>◈</span><strong>Unknown means unknown</strong><p>We don't call an unverified transfer complete.</p></div></section>
+      <footer><span>Setlora · Portaldot V3 testnet</span><span>Testnet only · Not audited · No real money</span></footer>
+    </main>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,51 +1,48 @@
-# Setlora web — milestone 02
+# Setlora web (milestone 03)
 
-A real wallet-connected browser flow designed for **Portaldot V3 testnet** and the existing `SetloraBatch.sol` contract ABI.
+A two-page Portaldot V3 testnet experience: public landing page (`/`) and wallet-connected workspace (`/app.html`).
 
 ## Run locally
 
-```bash
-cd ~/Desktop/portaldot/setlora/web
+```sh
+cd web
 npm install
 npm test
+npm run build
 npm run dev
 ```
 
-Open `http://127.0.0.1:5173/` (check the exact port in the terminal).
+Open the Vite URL to see the landing page. Use **Open app** to enter the workspace. To load the workspace directly use `http://127.0.0.1:5173/app.html`.
 
-**Preview mode is intentional:** without a verified deployed Setlora contract address, the invoice editor works but settlement/approval are disabled.
+## What works
 
-## Activate contract integration (only after verifying deployment)
+- Public landing page with honest testnet status, how-it-works, transparency and audience explanation
+- Invoice creation (up to 10), CSV import and downloadable CSV header template
+- Manual exact six-decimal pUSD validation, unique invoice numbers, address validation
+- MetaMask connect on explicit user action, network switch on explicit action
+- Contract address, bytecode, token identity and decimals checks before approvals
+- Per-payer invoice settlement checks, exact approval, batch call, receipt/event/flag verification
+- Last pending transaction snapshot in browser localStorage and conservative unknown/mismatch retry blocking
+- JSON receipt export only after verified settlement
 
-Copy `.env.example` to `.env.local`, then fill `VITE_SETLORA_CONTRACT_ADDRESS` with the verified contract address. This address is public; never put a private key, mnemonic, or signer secret in the `.env` file. Restart `npm run dev` after changes.
+## Live integration constraints
 
-The app checks `eth_getCode` for deployed bytecode and `token()` for the pUSD precompile. It also requires `decimals() == 6`. It asks for wallet confirmation before *each* `approve()` and `settle()` transaction.
+By design, approval and settlement controls are disabled until `VITE_SETLORA_CONTRACT_ADDRESS` is configured to a *real verified deployment*. The app does not deploy Setlora or mint pUSD. A working interface with no configured contract is **not** a completed transfer. Contract address must match V3 chain and point to the expected token. No transaction is sent on a page load.
 
-## App capabilities
+This is a *testnet* application, not audited or ready for mainnet funds. Do not put private keys in environment files or browser UI.
 
-- Invoice numbers, recipients, exact 6-decimal amounts, optional local notes
-- CSV import (headers `invoice,recipient,amount,note`)
-- Validate at most 10 invoice rows, positive amounts, unique invoice IDs, EVM address validation
-- Connect MetaMask and switch/add Portaldot V3 on explicit click
-- Verify contract address and configured token, wallet pUSD balance, allowance and `isSettled` flags
-- Approval for the exact batch amount (not unlimited)
-- Batch settlement with explicit second wallet authorization
-- Save last hash + expected invoice evidence in browser localStorage (never secrets)
-- Confirm only with receipt status, matching contract events and on-chain invoice settlement flags
-- Unknown/failed/mismatch states rather than claiming completion from broadcast
+## Environment
 
-## Limits and warnings
+Only after deployment and independent verification:
 
-- **Not yet tested on live Portaldot with a deployed Setlora contract or real pUSD payment.**
-- This is testnet software; the Solidity contract has nine passing local tests, not a security audit.
-- Each payer's invoice numbers are unique only within this specific Setlora deployment. No invoice authenticity or supplier identity attestation is implemented.
-- No server-side persistence, multi-user organization approvals or complete accounting import/export yet.
-- If a wallet or RPC fails before a transaction hash is returned, check the wallet's activity and on-chain records manually before retrying. The app cannot conclusively establish a never-returned hash.
-- The first review relies on pending chain state. Always approve only after checking full recipient addresses and amounts in your wallet.
-- The displayed pUSD comes from the documented third-party test token at the precompile address; funds are not supplied by Setlora.
-- Browser localStorage can contain payment metadata; avoid entering sensitive personal details and do not use on a shared computer.
-- Never deploy to mainnet or use real money on this test-only version.
+```sh
+cp .env.example .env.local
+# Set VITE_SETLORA_CONTRACT_ADDRESS to a real deployed contract address
+# Restart Vite
+```
 
-## Quality checks
+Note that a token approval is **not** a payment. Users explicitly sign the settlement transaction separately. A wallet/RPC failure before a hash is returned is inherently ambiguous. Confirm the wallet history and onchain nonce/settlement flags before retrying. The receipt export is a local evidence summary, not an independent attestation.
 
-`npm test` runs Node's standard-library tests for exact token math, canonical invoice numbers, CSV parsing, and event reconciliation. `npm run build` compiles the Vite app after installing dependencies.
+## Build and hosting
+
+`npm run build` emits two static pages: `dist/index.html` and `dist/app.html` plus assets. Deploy the `dist` folder to static hosting (for example Vercel's Vite output, Netlify, or a static web server). Both routes must remain accessible.

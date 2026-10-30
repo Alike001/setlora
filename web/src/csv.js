@@ -27,6 +27,7 @@ export function parseCsv(source) {
   if (!required.every(h => header.includes(h))) {
     throw new Error('CSV headers must include invoice,recipient,amount');
   }
+  if (lines.length === 0) throw new Error('CSV contains no invoice rows');
   if (lines.length > 10) throw new Error('Maximum 10 invoices per batch');
   return lines.map((cells, idx) => {
     if (cells.length !== header.length) throw new Error(`CSV row ${idx + 2} has the wrong number of columns`);
