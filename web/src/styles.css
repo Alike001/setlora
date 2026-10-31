@@ -22,3 +22,104 @@
 .confirm-dialog .danger-action{background:#9a3b34;color:white;}
 .confirm-dialog .danger-action:hover{background:#842e28;}
 @media(max-width:460px){.confirm-dialog{padding:22px}.confirm-dialog-actions .button{flex:1}}
+
+
+/* Setlora mobile invoice cards */
+@media (max-width: 650px) {
+  .table-wrap {
+    overflow-x: visible;
+  }
+
+  .table-wrap table,
+  .table-wrap tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .table-wrap thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  #invoice-rows tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #e1ebe5;
+  }
+
+  #invoice-rows td {
+    display: block;
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  #invoice-rows td:not(:last-child)::before {
+    display: block;
+    margin-bottom: 6px;
+    color: #5c7773;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  #invoice-rows td:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  #invoice-rows td:nth-child(1)::before {
+    content: "Invoice #";
+  }
+
+  #invoice-rows td:nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  #invoice-rows td:nth-child(2)::before {
+    content: "Recipient address";
+  }
+
+  #invoice-rows td:nth-child(3) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  #invoice-rows td:nth-child(3)::before {
+    content: "Amount (pUSD)";
+  }
+
+  #invoice-rows td:nth-child(4) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+  #invoice-rows td:nth-child(4)::before {
+    content: "Note (optional)";
+  }
+
+  #invoice-rows td:last-child {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  #invoice-rows input,
+  #invoice-rows td:nth-child(2) input,
+  #invoice-rows td:nth-child(3) input {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+  }
+
+  #invoice-rows .delete {
+    width: 44px;
+    height: 44px;
+  }
+}
