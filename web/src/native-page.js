@@ -6,6 +6,11 @@ const input = $('recipient');
 const button = $('check');
 const results = $('lookup-results');
 const grid = $('account-data');
+// Prefill an address from the payment workspace; never auto-run a query.
+const linkedAddress = new URLSearchParams(window.location.search).get('address');
+if (linkedAddress && linkedAddress.length <= 128) {
+  input.value = linkedAddress;
+}
 
 function addDetail(label, value) {
   const outer = document.createElement('div');

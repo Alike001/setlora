@@ -109,6 +109,12 @@ function buttons() {
   $('review').disabled = busy;
   $('approve').disabled = busy || !review || !sessionReady || !session || allowance >= review.total || tokenBalance < review.total || isUnresolved(last);
   $('settle').disabled = busy || !review || !sessionReady || !session || allowance < review.total || tokenBalance < review.total || isUnresolved(last);
+  $('approve').textContent = review && allowance >= review.total
+    ? 'Token approval already sufficient ✓'
+    : '1. Approve exact token amount';
+  $('settle').textContent = review && allowance >= review.total
+    ? 'Confirm batch payment'
+    : '2. Confirm batch settlement';
   $('check-tx').disabled = busy || !ownsSavedTransaction() || !last?.hash;
   $('export-receipt').disabled = busy || !ownsSavedTransaction() || !last?.hash || last?.status !== 'confirmed';
   const recovery = recoveryActionState({
@@ -154,6 +160,45 @@ function renderRecipientChecks(result) {
     description.textContent = check.status === 'ready'
       ? 'Recipient can receive this simulated pUSD transfer.' : check.message;
     row.append(title, description);
+    if (check.status === 'blocked' || check.status === 'ready') {
+      const actions = document.createElement('div');
+      actions.className = 'readiness-actions';
+
+      const edit = document.createElement('button');
+      edit.type = 'button';
+      edit.className = 'button subtle';
+      edit.textContent = 'Edit invoice';
+      edit.addEventListener('click', () => {
+        if (busy) return;
+        const index = rows.findIndex(item => {
+          try {
+            return BigInt(String(item.invoice).trim()) === BigInt(check.invoice);
+          } catch {
+            return false;
+          }
+        });
+        if (index < 0) return;
+        const invoiceRow = $('invoice-rows').querySelectorAll('tr')[index];
+        const field = /minimum|funds/i.test(check.message || '')
+          ? 'input[aria-label^="pUSD amount"]'
+          : 'input[aria-label^="Recipient wallet"]';
+        const target = invoiceRow?.querySelector(field);
+        target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target?.focus();
+      });
+      actions.append(edit);
+
+      if (/native account/i.test(check.message || '')) {
+        const link = document.createElement('a');
+        link.href = '/native.html?address=' +
+          encodeURIComponent(check.recipient);
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'Check native account';
+        actions.append(link);
+      }
+      row.append(actions);
+    }
     panel.append(row);
   }
   if (!result.ready) {
@@ -535,7 +580,19 @@ async function reviewClick() {
   setBusy(true);
   try {
     const batch = validateInvoices(rows, ethers.isAddress);
-    if (!sessionReady || !session) { review = null; renderReviewItems(batch); setMessage($('review-status'), `Invoice preview valid: ${batch.items.length} invoice(s), ${amountText(batch.total)} pUSD. Connect your wallet to verify on-chain status.`, 'warn'); return; }
+    if (!session) {
+      review = null;
+      renderReviewItems(batch);
+      setMessage($('review-status'), 'Invoice preview is valid. Choose a wallet to check the payment on-chain.', 'warn');
+      if (!connecting && !attemptingRestore) showWalletPicker();
+      return;
+    }
+    if (!sessionReady) {
+      review = null;
+      renderReviewItems(batch);
+      setMessage($('review-status'), 'Wallet connection is not ready. Check the network status before paying.', 'warn');
+      return;
+    }
     if (isUnresolved(last)) throw new Error('The last settlement is unresolved or mismatched. Recheck its transaction evidence before making another payment.');
     if (!batchRead) { review = null; renderReviewItems(batch); setMessage($('review-status'), 'Invoice values are valid, but the Setlora contract is not deployed/configured. PREVIEW ONLY — no settlement possible.', 'warn'); return; }
     const snapshot = session, version = sessionVersion;
@@ -560,7 +617,7 @@ async function reviewClick() {
     if (tokenBalance < batch.total) {
       setMessage($('review-status'), `Ready for review, but pUSD balance is insufficient: need ${amountText(batch.total)}, have ${amountText(tokenBalance)}. No wallet action is available.`, 'warn');
     } else if (allowance < batch.total) {
-      setMessage($('review-status'), `Verified invoices are unpaid for this wallet. Approve exactly ${amountText(batch.total)} pUSD, then review and settle.`, 'good');
+      setMessage($('review-status'), `Recipient checks passed. Approve exactly ${amountText(batch.total)} pUSD in your wallet, then confirm the payment. Approval alone does not pay recipients.`, 'good');
     } else setMessage($('review-status'), `Ready for explicit settlement approval: ${batch.items.length} invoices, ${amountText(batch.total)} pUSD.`, 'good');
   } catch (e) { review = null; if (session) showError(e); }
   finally { setBusy(false); }
