@@ -1,5 +1,53 @@
 # Setlora
 
+## How to test — Judges
+
+**Live app:** https://setlora.pages.dev/
+**Payment workspace:** https://setlora.pages.dev/app
+**Native account checker:** https://setlora.pages.dev/native
+
+### No wallet or test tokens needed
+1. Open the landing page and explore the workflow.
+2. Open the native account checker.
+3. Select Invoice #1001 or #1003, then click Check account.
+4. Inspect the reported pUSD asset-account state and balance.
+5. If the native RPC times out, the result is unavailable, not proof of an absent account.
+
+### Verified testnet settlement
+A real three-recipient batch was verified on Portaldot V3:
+- Invoice #1001: 0.10 pUSD
+- Invoice #1002: 0.15 pUSD
+- Invoice #1003: 0.20 pUSD
+- Total: 0.45 pUSD
+- Transaction: `0x0ea4730fc73f3842a80f3015ee682ffa2bc0c5312fccf272d9899ee3ec1e3c16`
+
+See the evidence section below for the payer, contract, and verification details. The current in-app recovery interface is payer-scoped; a wallet-free public receipt verifier is planned.
+
+### Test with your own EVM wallet
+1. Connect a supported EVM browser wallet to Portaldot V3 Testnet (chain ID 420420777).
+2. Enter a new invoice number, an EVM recipient address, and a pUSD amount.
+3. Click Review batch. Reviewing does not sign or transfer funds.
+4. For an actual settlement, the payer needs test pUSD and gas token. The wallet must explicitly approve and sign.
+5. Do not send real funds. Never share a private key or seed phrase.
+
+Test-token distribution is coordinated through Portaldot's official channels. No unrestricted public faucet is verified here.
+
+### Run automated tests locally
+Requires Node.js 22+ and npm.
+
+```sh
+cd web
+npm ci
+npm test
+npm run build
+```
+
+Solidity tests use Foundry from `contracts/` with `forge test -vv`.
+
+**Limits:** This is an unaudited testnet app. Native wallet payouts, sponsored account activation, and cross-chain settlement are not implemented.
+
+---
+
 **Invoice-aware batch payments with verifiable receipts on Portaldot V3 Testnet.**
 
 Setlora helps teams pay several contributors in one transaction while keeping invoice numbers attached to the results. Rather than juggling individual transfers, spreadsheets and screenshots, a payer prepares a batch, reviews the recipients and amounts, approves the exact test-token amount, and signs one atomic settlement. Setlora then checks the on-chain receipt, events and invoice flags before reporting completion.
