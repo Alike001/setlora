@@ -7,6 +7,8 @@
   <meta name="description" content="Setlora payment workspace: prepare invoice-linked batches, review wallet approval, and verify Portaldot V3 settlement." />
   <title>Payment workspace · Setlora</title>
   <link rel="icon" type="image/svg+xml" href="/setlora-icon.svg" />
+  <!-- Load workspace styles before rendering HTML to prevent a flash of unstyled markup. -->
+  <link rel="stylesheet" href="/src/styles.css" />
 </head>
 <body>
   <div id="app">
@@ -14,22 +16,37 @@
       <div class="topbar-inner">
         <a class="brand" href="/" aria-label="Setlora home"><span class="brand-mark">S<span>✓</span></span><span>setlora</span></a>
         <nav class="app-nav" aria-label="Workspace navigation"><a href="/" class="back-link">← Back to home</a><span class="nav-divider">/</span><strong>Payment workspace</strong></nav>
-        <div class="right-head"><span class="network-chip"><span class="network-light"></span> PORTALDOT V3 TESTNET</span><button class="button secondary" id="connect">Connect wallet</button></div>
+        <div class="right-head"><span class="network-chip"><span class="network-light"></span> PORTALDOT V3 TESTNET</span><button class="button secondary" id="connect">Connect wallet</button><details class="wallet-menu" id="wallet-menu" hidden><summary class="button secondary" id="wallet-address" aria-label="Wallet account menu">Wallet ▾</summary><div class="wallet-dropdown"><button type="button" class="button subtle" id="copy-wallet">Copy address</button><button type="button" class="button subtle" id="switch-wallet">Switch account</button><button type="button" class="button subtle" id="change-wallet">Change wallet</button><button type="button" class="button secondary" id="disconnect-wallet">Disconnect</button></div></details></div>
       </div>
     </header>
+    <dialog id="wallet-picker" aria-labelledby="wallet-picker-title" class="wallet-picker">
+      <div class="wallet-picker-header"><h2 id="wallet-picker-title">Connect wallet</h2><button type="button" id="close-wallet-picker" class="button subtle" aria-label="Close wallet selection">✕</button></div>
+      <p>Choose a wallet installed in this browser.</p>
+      <div id="wallet-choices" class="wallet-choices"></div>
+      <p class="wallet-picker-hint">Wallet not listed? Install its extension, then reopen this window.</p>
+    </dialog>
+    <dialog id="clear-draft-dialog" class="confirm-dialog" aria-labelledby="clear-draft-title" aria-describedby="clear-draft-description">
+      <div class="confirm-dialog-icon" aria-hidden="true">✕</div>
+      <h2 id="clear-draft-title">Clear this draft?</h2>
+      <p id="clear-draft-description">The invoices in this draft will be removed from this browser. Completed payments and receipts won't be affected.</p>
+      <div class="confirm-dialog-actions">
+        <button type="button" class="button subtle" id="cancel-clear-draft">Keep draft</button>
+        <button type="button" class="button danger-action" id="confirm-clear-draft">Clear draft</button>
+      </div>
+    </dialog>
     <main>
       <section class="page-intro">
         <div><div class="eyebrow">PAYMENTS / NEW BATCH</div><h1>Pay your people, <span>with confidence.</span></h1><p>Build a batch, check the details, and approve only when you are ready. Your wallet stays in your control.</p></div>
         <div class="page-intro-aside"><span class="aside-label">SETTLEMENT MODEL</span><strong>All or nothing</strong><span>If any transfer fails, the entire batch reverts.</span></div>
       </section>
-      <div class="preview-note" role="note"><span class="preview-note-icon">i</span><div><strong>Testnet preview</strong><span id="network-status" class="network-message" aria-live="polite">Checking contract configuration…</span></div></div>
+      <div class="preview-note" role="note"><span class="preview-note-icon">i</span><div><strong>Portaldot V3 Testnet</strong><span id="network-status" class="network-message" aria-live="polite">Checking contract configuration…</span></div></div>
       <div class="steps-nav" aria-label="Payment steps"><div><span>1</span><strong>Prepare invoices</strong></div><i></i><div><span>2</span><strong>Review & approve</strong></div><i></i><div><span>3</span><strong>Settle & verify</strong></div></div>
       <section class="workspace">
         <div class="panel editor">
           <div class="panel-head"><div><div class="eyebrow">STEP 01 · CREATE BATCH</div><h2>Who are you paying?</h2><p>Enter up to 10 invoices. Keep recipient addresses and amounts precise.</p></div><div class="head-actions"><label class="button subtle file-button">Import CSV<input type="file" id="csvfile" accept=".csv,text/csv" hidden></label><button class="button subtle" id="add">+ Add recipient</button></div></div>
           <div class="editor-toolbar"><span>Invoice numbers must be unique for your wallet.</span><button id="download-template" type="button" class="text-button">Download CSV template ↓</button></div>
           <div class="table-wrap"><table><thead><tr><th>Invoice #</th><th>Recipient address</th><th>Amount (pUSD)</th><th>Note (optional)</th><th></th></tr></thead><tbody id="invoice-rows"></tbody></table></div>
-          <div class="editor-footer"><span>Nothing will be sent when you click Review.</span><button class="button primary" id="review">Review batch →</button></div>
+          <div class="editor-footer"><div class="draft-footer"><span>Nothing will be sent when you click Review.</span><span id="draft-status" aria-live="polite">Connect your wallet to save drafts.</span><button class="text-button" type="button" id="clear-draft">Clear draft</button></div><button class="button primary" id="review">Review batch →</button></div>
         </div>
         <aside class="panel summary">
           <div class="eyebrow">STEP 02 · REVIEW</div><h2>Payment summary</h2>
@@ -39,17 +56,63 @@
           <div class="metric"><span>Token allowance</span><strong id="allowance">—</strong></div>
           <div class="divider"></div>
           <div id="review-status" class="message muted" role="status" aria-live="polite">Fill in the invoices. Then review them before doing anything with your wallet.</div>
-          <div id="review-items" class="review-items" aria-live="polite"></div>
+          <div id="recipient-readiness" class="recipient-readiness" role="status" aria-live="polite"></div><div id="review-items" class="review-items" aria-live="polite"></div>
           <button class="button secondary wide" id="approve" disabled>1. Approve exact token amount</button>
           <button class="button primary wide" id="settle" disabled>2. Confirm batch settlement</button>
           <div class="small-note">Two separate wallet confirmations. Setlora never signs for you, and approval alone does not pay anyone.</div>
         </aside>
       </section>
-      <section class="panel audit" id="verification"><div class="panel-head"><div><div class="eyebrow">STEP 03 · PROOF</div><h2>Settlement evidence</h2><p>Confirmed means the blockchain receipt, invoice events and settlement flags all match.</p></div><button class="button subtle" id="check-tx" disabled>Recheck last transaction ↻</button></div><div id="transaction-status" class="message muted" role="status" aria-live="polite">No transaction has been submitted from this browser.</div><div class="evidence" id="evidence"></div><div class="verification-footer"><span>Receipts are checked against the configured Setlora contract.</span><button class="text-button" id="export-receipt" disabled>Export verified JSON receipt ↓</button></div></section>
+      <section class="panel audit" id="verification"><div class="panel-head"><div><div class="eyebrow">STEP 03 · PROOF</div><h2>Settlement evidence</h2><p>Confirmed means the blockchain receipt, invoice events and settlement flags all match.</p></div><button class="button subtle" id="check-tx" disabled>Recheck last transaction ↻</button></div><div id="transaction-status" class="message muted" role="status" aria-live="polite">No transaction has been submitted from this browser.</div><div class="evidence" id="evidence"></div><div class="recovery-row"><label for="manual-hash">Verify an existing Setlora payment (read-only)</label><input id="manual-hash" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="66" placeholder="0x… 64 hex characters" aria-describedby="transaction-status"/><button class="button subtle" id="restore-hash" disabled>Verify previous payment</button></div><div class="verification-footer"><span>Receipts are checked against the configured Setlora contract.</span><button class="text-button" id="export-receipt" disabled>Export verified JSON receipt ↓</button></div></section>
+      <section class="panel audit" id="payment-history" aria-labelledby="payment-history-title">
+        <div class="panel-head"><div><div class="eyebrow">YOUR PAYMENTS</div><h2 id="payment-history-title">Payment history</h2><p>Revisit your completed payments and download a receipt after checking the blockchain again.</p></div></div>
+        <div id="history-status" class="message muted" role="status" aria-live="polite">Previously verified payments are saved on this browser. Recheck them before exporting proof.</div>
+        <div id="history-list" class="history-list" aria-live="polite"></div>
+        <div id="history-detail" class="history-detail" aria-live="polite"></div>
+        <div class="verification-footer"><span>Payments are scoped to your wallet, network and contract. For another device, use Verify previous payment above.</span><button class="text-button" id="history-export" disabled>Download verified receipt ↓</button></div>
+      </section>
       <section class="assurance"><div><span>◎</span><strong>Your wallet, your approval</strong><p>Setlora doesn't hold your signing keys.</p></div><div><span>⧉</span><strong>Invoices tracked onchain</strong><p>Prevents replay through this contract for the payer.</p></div><div><span>◈</span><strong>Unknown means unknown</strong><p>We don't call an unverified transfer complete.</p></div></section>
       <footer><span>Setlora · Portaldot V3 testnet</span><span>Testnet only · Not audited · No real money</span></footer>
     </main>
   </div>
+  <style>
+    .recipient-readiness { display: grid; gap: 8px; margin: 12px 0; }
+    .readiness-row { padding: 10px 12px; border: 1px solid #d8e8df; background: #f2faf6; border-radius: 10px; display: grid; gap: 4px; font-size: 12px; }
+    .readiness-row strong { font-weight: 650; }
+    .readiness-row span { color: #375b52; line-height: 1.5; }
+    .readiness-row.blocked { background: #fff7eb; border-color: #f1d6ab; }
+    .readiness-row.blocked span { color: #76501f; }
+    .readiness-help { font-size: 12px; line-height: 1.6; color: #594a32; margin: 4px 0; }
+    .recipient-readiness a { color: #087f63; font-size: 12px; text-decoration: underline; }
+    .history-list { display: grid; gap: 9px; margin: 16px 0; }
+    .history-entry { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 13px 15px; background: #f6faf8; border: 1px solid #dae7e1; border-radius: 12px; }
+    .history-entry > div { display: grid; gap: 5px; min-width: 0; }
+    .history-entry strong { font-size: 14px; color: #18383b; }
+    .history-entry .small-note { margin: 0; }
+    .history-detail { padding: 14px; border-top: 1px solid #e1ece6; }
+    .history-detail h3 { color: #124d41; font-size: 18px; margin: 4px 0 8px; }
+    .history-detail .history-overview { font-size: 14px; font-weight: 600; }
+    .history-invoice { padding: 9px 0; border-bottom: 1px solid #e5eee8; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+    .history-invoice strong { white-space: nowrap; }
+    .history-fullhash { display: block; overflow-wrap: anywhere; font-size: 11px; margin: 12px 0; color: #53706a; }
+    @media (max-width: 600px) { .history-entry { align-items: stretch; } .history-entry button { width: 100%; } }
+    /* Isolated wallet-menu styles; leave existing payment and landing CSS intact. */
+    .wallet-menu { position: relative; }
+    .wallet-menu > summary { cursor: pointer; list-style: none; white-space: nowrap; }
+    .wallet-menu > summary::-webkit-details-marker { display: none; }
+    .wallet-dropdown { position: absolute; right: 0; top: calc(100% + 8px); width: min(240px, 85vw); padding: 12px; z-index: 30; background: #fff; color: #19383c; border: 1px solid #d7e5df; border-radius: 12px; box-shadow: 0 10px 25px #10272926; display: grid; gap: 8px; }
+    .wallet-dropdown button { width: 100%; text-align: left; }
+    .wallet-picker { width: min(420px, calc(100vw - 24px)); padding: 24px; border: 1px solid #d7e5df; border-radius: 18px; background: #fff; color: #19383c; box-shadow: 0 24px 70px #10272935; }
+    .wallet-picker::backdrop { background: #10272980; }
+    .wallet-picker-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .wallet-picker-header h2 { margin: 0; font-size: 21px; }
+    .wallet-picker-header button { width: 40px; min-width: 40px; }
+    .wallet-picker > p { font-size: 14px; color: #536d6e; }
+    .wallet-choices { display: grid; gap: 8px; margin: 20px 0; }
+    .wallet-choice { padding: 16px; text-align: left; background: #f4faf7; color: #19383c; border: 1px solid #d7e5df; border-radius: 10px; font: inherit; cursor: pointer; }
+    .wallet-choice:hover, .wallet-choice:focus-visible { border-color: #13a984; background: #ecf8f2; }
+    .wallet-empty, .wallet-picker-hint { font-size: 13px; }
+    [hidden] { display: none !important; }
+  </style>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>
