@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f7faf8" />
+  <meta name="description" content="Check native Portaldot V3 pUSD asset account records without connecting a wallet or signing." />
+  <title>Native account checker · Setlora</title>
+  <link rel="icon" type="image/svg+xml" href="/setlora-icon.svg" />
+  <link rel="stylesheet" href="/src/native.css" />
+</head>
+<body>
+  <header class="header"><div class="wrap header-inner"><a class="brand" href="/">▣ <span>setlora</span></a><nav aria-label="Main navigation"><a href="/app.html">Payment workspace</a><span>Portaldot V3 Testnet</span></nav></div></header>
+  <main class="wrap">
+    <div class="intro"><div class="eyebrow">PORTALDOT V3 / ACCOUNT LOOKUP</div><h1>Check an account <em>before you pay.</em></h1><p>Look up native account and pUSD information on the testnet. No wallet connection, token transfer or signature required.</p></div>
+    <section class="panel" aria-labelledby="lookup-title">
+      <div class="panel-heading"><div><div class="eyebrow">READ-ONLY LOOKUP</div><h2 id="lookup-title">Which account are you checking?</h2></div><span class="chip">pUSD · Asset 7777</span></div>
+      <form id="native-form"><label for="recipient">Native 5… or EVM 0x… address</label><div class="input-row"><input id="recipient" name="recipient" required autocomplete="off" spellcheck="false" placeholder="Paste a Portaldot account address" /><button type="submit" id="check">Check account</button></div></form>
+      <div class="examples"><span>Try verified testnet examples:</span><button type="button" data-address="5DrvqbnsxBeJj3LtLyehHRuRo9Ews751CkGneMb8kKxsv8Jg">Invoice #1001</button><button type="button" data-address="5EwJzdAdG1mx3w5oxL8ccDMpwqA1W81xPz54AF9Ga8bLBJK9">Invoice #1003</button></div>
+      <div id="lookup-status" class="notice" role="status" aria-live="polite">Account lookups read live storage. Results do not guarantee a future transfer will succeed.</div>
+    </section>
+    <section id="lookup-results" class="panel" hidden aria-live="polite" aria-label="Account lookup results"><div class="eyebrow">ACCOUNT DETAILS</div><h2 id="lookup-result-title">Native account</h2><div id="account-data" class="detail-grid"></div><p id="lookup-assessment" class="notice"></p><p class="hint">This is a storage check, not a simulated transfer. Setlora's EVM payment workspace performs its own separate recipient transfer simulation.</p></section>
+    <section class="notes"><div><strong>Native vs EVM</strong><p>An EVM address can have a native AccountId32 representation. That does not make every native account a usable EVM recipient.</p></div><div><strong>Non-sufficient pUSD</strong><p>Asset 7777 does not maintain account existence on its own. Missing asset records need more checks, not an automatic payment.</p></div><div><strong>No automatic activation</strong><p>Setlora does not fund accounts, collect keys, or submit asset activation transactions from this screen.</p></div></section>
+  </main>
+  <footer class="wrap">Setlora · Portaldot V3 Testnet · Read-only · Not audited</footer>
+  <script type="module" src="/src/native-page.js"></script>
+</body>
+</html>
