@@ -3,6 +3,7 @@
 ## How to test — Judges
 
 **Live app:** https://setlora.pages.dev/
+**Wallet-free verification:** https://setlora.pages.dev/proof
 **Payment workspace:** https://setlora.pages.dev/app
 **Native account checker:** https://setlora.pages.dev/native
 

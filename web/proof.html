@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f7faf8" />
+  <meta name="description" content="Check a real Setlora testnet payment using public on-chain evidence. No wallet needed." />
+  <title>Verify a payment · Setlora</title>
+  <link rel="icon" href="/setlora-icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/src/proof.css" />
+</head>
+<body>
+  <header class="header"><nav class="wrap nav" aria-label="Primary navigation">
+    <a class="brand" href="/">▣ setlora</a>
+    <div class="links"><a href="/app.html">Payment workspace</a><a href="/native.html">Check an account</a></div>
+  </nav></header>
+  <main class="wrap">
+    <div class="eyebrow">PORTALDOT V3 TESTNET · READ-ONLY</div>
+    <h1>Know whether a <em>payment really settled.</em></h1>
+    <p class="lead">Check the receipt, on-chain invoice events, batch total, and settlement flags. Anyone can verify a Setlora payment without connecting a wallet.</p>
+    <section class="panel" aria-labelledby="proof-title">
+      <h2 id="proof-title">Verify a transaction</h2>
+      <form id="proof-form">
+        <label for="tx-hash">Transaction hash</label>
+        <div class="input-row"><input type="text" id="tx-hash" spellcheck="false" autocomplete="off" placeholder="0x… (64 hex characters)" required maxlength="66" />
+          <button id="verify-btn" type="submit">Verify payment</button></div>
+      </form>
+      <button type="button" id="example-btn" class="example">Use the real 3-recipient testnet example</button>
+      <p class="note">Testnet only. A transaction hash alone is not evidence of success, and RPC outages do not imply failure. No transaction or signature is requested.</p>
+      <p id="proof-status" class="notice" role="status" aria-live="polite">Enter a transaction hash or select the example.</p>
+    </section>
+    <section class="panel" id="proof-result" hidden aria-labelledby="result-title">
+      <div class="result-heading"><h2 id="result-title">Verification details</h2><span id="result-state"></span></div>
+      <div class="details">
+        <div><span>Network</span><strong>Portaldot V3 Testnet</strong></div>
+        <div><span>Token</span><strong>pUSD · 6 decimals</strong></div>
+        <div><span>Payer</span><code id="proof-payer"></code></div>
+        <div><span>Contract</span><code id="proof-contract"></code></div>
+        <div><span>Block number</span><strong id="proof-block"></strong></div>
+        <div><span>Batch total</span><strong id="proof-total"></strong></div>
+      </div>
+      <h3>Invoice events</h3>
+      <div id="proof-items" class="items"></div>
+      <p id="proof-detail" class="notice"></p>
+      <div class="actions"><button type="button" id="copy-proof">Copy verification link</button></div>
+    </section>
+    <p class="footnote">Verification checks current public chain information from a Portaldot V3 RPC. It does not guarantee future transfer success, provide an independent financial audit, or establish the authenticity of off-chain invoices.</p>
+  </main>
+  <footer class="wrap">Setlora · Portaldot V3 Testnet · Read-only · Not audited</footer>
+  <script type="module" src="/src/proof-page.js"></script>
+</body>
+</html>
