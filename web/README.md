@@ -1,48 +1,43 @@
-# Setlora web (milestone 03)
+# Setlora web
 
-A two-page Portaldot V3 testnet experience: public landing page (`/`) and wallet-connected workspace (`/app.html`).
+Static Vite application for **Portaldot V3 Testnet**. The landing page is `/`; the EVM wallet-connected payment workspace is `/app.html`.
 
-## Run locally
+## Local setup
 
-```sh
+```bash
 cd web
-npm install
+npm ci
 npm test
 npm run build
-npm run dev
 ```
 
-Open the Vite URL to see the landing page. Use **Open app** to enter the workspace. To load the workspace directly use `http://127.0.0.1:5173/app.html`.
+Set the public V3 testnet contract address in `web/.env.local` (the file is Git-ignored):
 
-## What works
-
-- Public landing page with honest testnet status, how-it-works, transparency and audience explanation
-- Invoice creation (up to 10), CSV import and downloadable CSV header template
-- Manual exact six-decimal pUSD validation, unique invoice numbers, address validation
-- MetaMask connect on explicit user action, network switch on explicit action
-- Contract address, bytecode, token identity and decimals checks before approvals
-- Per-payer invoice settlement checks, exact approval, batch call, receipt/event/flag verification
-- Last pending transaction snapshot in browser localStorage and conservative unknown/mismatch retry blocking
-- JSON receipt export only after verified settlement
-
-## Live integration constraints
-
-By design, approval and settlement controls are disabled until `VITE_SETLORA_CONTRACT_ADDRESS` is configured to a *real verified deployment*. The app does not deploy Setlora or mint pUSD. A working interface with no configured contract is **not** a completed transfer. Contract address must match V3 chain and point to the expected token. No transaction is sent on a page load.
-
-This is a *testnet* application, not audited or ready for mainnet funds. Do not put private keys in environment files or browser UI.
-
-## Environment
-
-Only after deployment and independent verification:
-
-```sh
-cp .env.example .env.local
-# Set VITE_SETLORA_CONTRACT_ADDRESS to a real deployed contract address
-# Restart Vite
+```dotenv
+VITE_SETLORA_CONTRACT_ADDRESS=0x2d17199920251f7eec8a555043c8387194ff5d1b
 ```
 
-Note that a token approval is **not** a payment. Users explicitly sign the settlement transaction separately. A wallet/RPC failure before a hash is returned is inherently ambiguous. Confirm the wallet history and onchain nonce/settlement flags before retrying. The receipt export is a local evidence summary, not an independent attestation.
+Then start the dev server:
+
+```bash
+npm run dev -- --port 5173 --strictPort
+```
+
+Open `http://127.0.0.1:5173/` for the landing page or `/app.html` for the workspace. You need a compatible EVM wallet and Portaldot V3 testnet tokens for payment actions. **Do not use real money or store keys in `.env.local`.**
+
+## Current features
+
+- Up to 10 invoice recipients, exact six-decimal pUSD amounts, CSV import and duplicate-invoice prevention per payer/contract.
+- EVM wallet discovery, change-wallet and account switching; session restoration does not silently request wallet permissions.
+- Contract code, chain, token identity, decimals, balances, allowance and existing invoice checks before payment.
+- Read-only recipient-transfer simulation; full-batch preflight, exact approval, explicit batch settlement.
+- Transaction receipt/event/invoice-flag verification before marking a settlement confirmed or exporting a JSON receipt.
+- Browser-local account/contract/chain-scoped drafts and verified payment history. Historical hashes can be checked on-chain from other browsers when supplied manually.
+
+**Important:** This is a testnet-only, unaudited EVM workflow. Native SS58 addresses are not accepted by the current payment contract. Browser history does not automatically sync between devices; never interpret a local record as fresh chain proof without rechecking it. Recipient simulations are useful warnings, not guarantees of final execution.
 
 ## Build and hosting
 
-`npm run build` emits two static pages: `dist/index.html` and `dist/app.html` plus assets. Deploy the `dist` folder to static hosting (for example Vercel's Vite output, Netlify, or a static web server). Both routes must remain accessible.
+`npm run build` creates `dist/index.html`, `dist/app.html` and their bundled assets. Configure the `VITE_SETLORA_CONTRACT_ADDRESS` environment variable **at build time** in your hosting provider and deploy the `dist` folder. Keep both URLs accessible. A blank contract address intentionally disables payment actions.
+
+For the working testnet example, deployed addresses, replay semantics, evidence and native-account roadmap, see the [root README](../README.md).
