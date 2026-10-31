@@ -109,6 +109,12 @@ function buttons() {
   $('review').disabled = busy;
   $('approve').disabled = busy || !review || !sessionReady || !session || allowance >= review.total || tokenBalance < review.total || isUnresolved(last);
   $('settle').disabled = busy || !review || !sessionReady || !session || allowance < review.total || tokenBalance < review.total || isUnresolved(last);
+  $('approve').textContent = review && allowance >= review.total
+    ? 'Token approval already sufficient ✓'
+    : '1. Approve exact token amount';
+  $('settle').textContent = review && allowance >= review.total
+    ? 'Confirm batch payment'
+    : '2. Confirm batch settlement';
   $('check-tx').disabled = busy || !ownsSavedTransaction() || !last?.hash;
   $('export-receipt').disabled = busy || !ownsSavedTransaction() || !last?.hash || last?.status !== 'confirmed';
   const recovery = recoveryActionState({
@@ -535,7 +541,19 @@ async function reviewClick() {
   setBusy(true);
   try {
     const batch = validateInvoices(rows, ethers.isAddress);
-    if (!sessionReady || !session) { review = null; renderReviewItems(batch); setMessage($('review-status'), `Invoice preview valid: ${batch.items.length} invoice(s), ${amountText(batch.total)} pUSD. Connect your wallet to verify on-chain status.`, 'warn'); return; }
+    if (!session) {
+      review = null;
+      renderReviewItems(batch);
+      setMessage($('review-status'), 'Invoice preview is valid. Choose a wallet to check the payment on-chain.', 'warn');
+      if (!connecting && !attemptingRestore) showWalletPicker();
+      return;
+    }
+    if (!sessionReady) {
+      review = null;
+      renderReviewItems(batch);
+      setMessage($('review-status'), 'Wallet connection is not ready. Check the network status before paying.', 'warn');
+      return;
+    }
     if (isUnresolved(last)) throw new Error('The last settlement is unresolved or mismatched. Recheck its transaction evidence before making another payment.');
     if (!batchRead) { review = null; renderReviewItems(batch); setMessage($('review-status'), 'Invoice values are valid, but the Setlora contract is not deployed/configured. PREVIEW ONLY — no settlement possible.', 'warn'); return; }
     const snapshot = session, version = sessionVersion;

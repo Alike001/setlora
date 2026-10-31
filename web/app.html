@@ -15,7 +15,7 @@
     <header class="topbar">
       <div class="topbar-inner">
         <a class="brand" href="/" aria-label="Setlora home"><span class="brand-mark">S<span>✓</span></span><span>setlora</span></a>
-        <nav class="app-nav" aria-label="Workspace navigation"><a href="/" class="back-link">← Back to home</a><span class="nav-divider">/</span><strong>Payment workspace</strong></nav>
+        <nav class="app-nav" aria-label="Workspace navigation"><a href="/" class="back-link">← Back to home</a><span class="nav-divider">/</span><strong>Payment workspace</strong><span class="nav-divider">/</span><a href="/native.html" class="back-link">Native account checker</a></nav>
         <div class="right-head"><span class="network-chip"><span class="network-light"></span> PORTALDOT V3 TESTNET</span><button class="button secondary" id="connect">Connect wallet</button><details class="wallet-menu" id="wallet-menu" hidden><summary class="button secondary" id="wallet-address" aria-label="Wallet account menu">Wallet ▾</summary><div class="wallet-dropdown"><button type="button" class="button subtle" id="copy-wallet">Copy address</button><button type="button" class="button subtle" id="switch-wallet">Switch account</button><button type="button" class="button subtle" id="change-wallet">Change wallet</button><button type="button" class="button secondary" id="disconnect-wallet">Disconnect</button></div></details></div>
       </div>
     </header>
@@ -59,7 +59,7 @@
           <div id="recipient-readiness" class="recipient-readiness" role="status" aria-live="polite"></div><div id="review-items" class="review-items" aria-live="polite"></div>
           <button class="button secondary wide" id="approve" disabled>1. Approve exact token amount</button>
           <button class="button primary wide" id="settle" disabled>2. Confirm batch settlement</button>
-          <div class="small-note">Two separate wallet confirmations. Setlora never signs for you, and approval alone does not pay anyone.</div>
+          <div class="small-note">If token approval is already sufficient, you can skip it. Otherwise approval and payment require separate wallet confirmations. Approval alone does not pay anyone.</div>
         </aside>
       </section>
       <section class="panel audit" id="verification"><div class="panel-head"><div><div class="eyebrow">STEP 03 · PROOF</div><h2>Settlement evidence</h2><p>Confirmed means the blockchain receipt, invoice events and settlement flags all match.</p></div><button class="button subtle" id="check-tx" disabled>Recheck last transaction ↻</button></div><div id="transaction-status" class="message muted" role="status" aria-live="polite">No transaction has been submitted from this browser.</div><div class="evidence" id="evidence"></div><div class="recovery-row"><label for="manual-hash">Verify an existing Setlora payment (read-only)</label><input id="manual-hash" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="66" placeholder="0x… 64 hex characters" aria-describedby="transaction-status"/><button class="button subtle" id="restore-hash" disabled>Verify previous payment</button></div><div class="verification-footer"><span>Receipts are checked against the configured Setlora contract.</span><button class="text-button" id="export-receipt" disabled>Export verified JSON receipt ↓</button></div></section>
