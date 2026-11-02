@@ -104,6 +104,9 @@ body.product-redesign main {
   padding-bottom: 22px;
 }
 .product-topline strong { color: #18363b; }
+.product-topline a, .product-guide-link a { color: #0e896b; font-weight: 700; }
+.product-guide-link { margin: 16px 0; font-size: 13px; }
+.product-guide-link a:hover { text-decoration: underline; }
 .product-network .preview-note {
   margin: 24px 0 0;
   background: #eef8f3;

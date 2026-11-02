@@ -22,16 +22,18 @@ To build: `npm run build` (output: `docs-site/dist/`).
 Astro is configured with `base: '/docs'` and `site: 'https://setlora.pages.dev'`.
 Keep the existing Vite site at `/` and the docs at `/docs/`.
 
-Before changing Cloudflare Pages build settings, inspect the **actual Astro output tree** after `npm run build` and the existing Pages build command/root directory. Combine the generated docs with the existing Vite output in the same final publication directory, ensuring Astro-generated assets retain their `/docs/` paths. Test both `/app` and `/docs/` through a Cloudflare preview deployment.
+A combined site build is available from `web/` via `npm run build:site`. It installs locked Astro dependencies, builds the MDX docs with the `/docs/` base, builds the Vite web app, and copies the generated docs into `web/dist/docs/`. Both products share one publication directory while keeping the existing application entrypoints.
+
+For the existing Cloudflare Pages project with root directory `web`, use build command `npm run build:site` and output directory `dist` (or `web/dist` if paths are repo-root relative). Confirm the actual root and build configuration before changing it. Preserve the current `VITE_SETLORA_CONTRACT_ADDRESS` environment setting. Test `/`, `/app`, `/proof`, `/native`, `/docs/`, and `/docs/how-to-test/` on a preview deployment before making the change live.
 
 **Do not simply change the existing Cloudflare output directory to `docs-site/dist`**—that would remove the payment app from the published site.
 
-The documentation is source-only here; it has not been built on the user's machine. No payment logic has been modified.
+The docs are not public until the combined build is deployed on Cloudflare Pages. No wallet, transaction or contract logic is modified by this change.
 
-## Add links to the main site after verification
+## Navigation links to documentation
 
-- Landing header: **Docs** linking to `/docs/`.
-- New payment: help link to `/docs/send-payments/`.
+- Landing header and footer: **Docs** linking to `/docs/`.
+- New payment and payment review: help links to `/docs/send-payments/`.
 - Public verifier: help link to `/docs/verify-payment/`.
 - Recipient checker: help link to `/docs/check-recipient/`.
 - README: **Documentation** linking to `https://setlora.pages.dev/docs/` once deployed.

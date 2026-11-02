@@ -21,6 +21,7 @@
       <div id="lookup-status" class="notice" role="status" aria-live="polite">Account lookups read live storage. Results do not guarantee a future transfer will succeed.</div>
     </section>
     <section id="lookup-results" class="panel" hidden aria-live="polite" aria-label="Account lookup results"><div class="eyebrow">ACCOUNT DETAILS</div><h2 id="lookup-result-title">Native account</h2><div id="account-data" class="detail-grid"></div><p id="lookup-assessment" class="notice"></p><p class="hint">This is a storage check, not a simulated transfer. Setlora's EVM payment workspace performs its own separate recipient transfer simulation.</p></section>
+    <p class="hint"><a href="/docs/check-recipient/">Read the recipient account guide ↗</a></p>
     <section class="notes"><div><strong>Native vs EVM</strong><p>An EVM address can have a native AccountId32 representation. That does not make every native account a usable EVM recipient.</p></div><div><strong>Non-sufficient pUSD</strong><p>Asset 7777 does not maintain account existence on its own. Missing asset records need more checks, not an automatic payment.</p></div><div><strong>No automatic activation</strong><p>Setlora does not fund accounts, collect keys, or submit asset activation transactions from this screen.</p></div></section>
   </main>
   <footer class="wrap">Setlora · Portaldot V3 Testnet · Read-only · Not audited</footer>
