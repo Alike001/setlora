@@ -11,7 +11,6 @@ export default defineConfig({
       description: 'Guides for invoice-linked testnet batch payments and verifiable receipts',
       sidebar: [
         { label: '← Back to Setlora', link: 'https://setlora.pages.dev/' },
-        { label: 'Open payment workspace ↗', link: 'https://setlora.pages.dev/app' },
         { label: 'Getting started', items: [
           { slug: 'index' },
           { slug: 'getting-started' },
