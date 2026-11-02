@@ -1,0 +1,58 @@
+/* Narrow-screen workspace navigation for the isolated redesign.
+   Provides actual links even while an invoice is under review. */
+body.product-redesign .mobile-workspace-nav { display: none; }
+@media (max-width: 900px) {
+  body.product-redesign .product-sidebar { display: none !important; }
+  body.product-redesign .mobile-workspace-nav {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 14px;
+    min-height: 58px;
+    width: 100%;
+    max-width: 100%;
+    position: sticky;
+    top: 68px;
+    z-index: 22;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    border-bottom: 1px solid #d5e5dd;
+    background: #ffffff;
+  }
+  body.product-redesign .mobile-workspace-nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 10px 13px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #385a4d;
+    white-space: nowrap;
+    font-size: 13px;
+    line-height: 1.25;
+    font-weight: 750;
+    text-decoration: none;
+  }
+  body.product-redesign .mobile-workspace-nav a[aria-current="page"] {
+    background: #dcf7eb;
+    border-color: #bbdfce;
+    color: #075e46;
+  }
+  body.product-redesign .mobile-workspace-nav a:focus-visible {
+    outline: 3px solid #087859;
+    outline-offset: 2px;
+  }
+  body.product-redesign .product-content {
+    min-width: 0;
+  }
+}
+@media (max-width: 650px) {
+  body.product-redesign .mobile-workspace-nav { top: 65px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.product-redesign .mobile-workspace-nav { scroll-behavior: auto; }
+}

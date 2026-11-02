@@ -1,0 +1,287 @@
+/* Phase C: serious, properly scoped History and Payment Details layout.
+   The existing history, recovery and receipt handlers remain untouched. */
+body.product-redesign [data-pane="history"],
+body.product-redesign [data-pane="details"] {
+  max-width:1160px;
+  margin-inline:auto;
+}
+body.product-redesign :is([data-pane="history"],[data-pane="details"]) .view-heading {
+  padding:38px 0 18px;
+}
+body.product-redesign :is([data-pane="history"],[data-pane="details"]) .view-heading h1 {
+  font-size:clamp(30px,3vw,42px);
+  margin-bottom:8px;
+}
+body.product-redesign :is([data-pane="history"],[data-pane="details"]) .view-heading p {
+  max-width:650px;
+  font-size:14px;
+  line-height:1.7;
+  color:#4d6e63;
+}
+/* Put records and explainers side by side rather than stretching a 1-field card. */
+body.product-redesign #history-view,
+body.product-redesign #details-view {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(255px,300px);
+  gap:20px;
+  align-items:start;
+}
+body.product-redesign #history-view .audit,
+body.product-redesign #details-view .audit {
+  margin:0;
+  min-width:0;
+  overflow:hidden;
+  border:1px solid #d7e5df;
+  border-radius:17px;
+  box-shadow:0 10px 26px rgba(15,57,44,.055);
+  background:#fff;
+}
+/* Hide repetitive HISTORY internal heading: the page heading supplies the title. */
+body.product-redesign #history-view #payment-history .panel-head {
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  margin:0;
+  overflow:hidden;
+  clip-path:inset(50%);
+  white-space:nowrap;
+}
+body.product-redesign #history-view #history-status {
+  margin:24px 24px 8px;
+  color:#426b5c;
+  background:#eef7f2;
+  border:1px solid #deeee5;
+  border-radius:11px;
+  font-size:13px;
+  line-height:1.7;
+}
+body.product-redesign #history-view #history-list {
+  min-height:72px;
+  margin:0;
+  padding:14px 24px 20px;
+  color:#526d64;
+  font-size:13px;
+  line-height:1.65;
+}
+body.product-redesign #history-view .history-entry {
+  border:1px solid #d9e8e0;
+  border-radius:11px;
+  background:#fbfdfb;
+  padding:16px;
+}
+body.product-redesign #history-view #history-detail {
+  padding:0 24px;
+  border-top:0;
+}
+body.product-redesign #history-view #history-detail:not(:empty) {
+  padding:20px 24px;
+  border-top:1px solid #e5efea;
+}
+body.product-redesign #history-view .verification-footer,
+body.product-redesign #details-view .verification-footer {
+  padding:17px 24px;
+  line-height:1.6;
+  color:#536c62;
+}
+/* DETAILS: preserve the real recheck button while removing duplicated headings. */
+body.product-redesign #details-view #verification .panel-head {
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  padding:19px 24px 14px;
+  border-bottom:1px solid #eef2ef;
+}
+body.product-redesign #details-view #verification .panel-head > div {
+  position:absolute;
+  width:1px;
+  height:1px;
+  padding:0;
+  overflow:hidden;
+  clip-path:inset(50%);
+  white-space:nowrap;
+}
+body.product-redesign #details-view #verification .panel-head button {
+  min-height:44px;
+}
+body.product-redesign #details-view #transaction-status {
+  margin:20px 24px;
+  padding:16px;
+  background:#f0f7f3;
+  color:#4a695e;
+  font-size:13px;
+  line-height:1.7;
+}
+body.product-redesign #details-view .evidence {
+  padding:0 24px;
+}
+body.product-redesign #details-view .recovery-row {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  margin:0;
+  padding:18px 24px 24px;
+  align-items:end;
+}
+body.product-redesign #details-view .recovery-row label {
+  grid-column:1 / -1;
+  font-size:13px;
+  font-weight:750;
+  color:#2a4e43;
+}
+body.product-redesign #details-view .recovery-row input {
+  min-width:0;
+  width:100%;
+  min-height:49px;
+  border:1px solid #bfd5ca;
+  border-radius:10px;
+  padding:11px 15px;
+  font-size:14px;
+  background:#fff;
+}
+body.product-redesign #details-view .recovery-row button { min-height:49px; }
+body.product-redesign #details-view .recovery-row input:focus-visible {
+  outline:3px solid #159b806b;
+  outline-offset:2px;
+}
+/* Helpful contextual cards—not fabricated activity statistics. */
+body.product-redesign .records-guide {
+  padding:25px;
+  background:#fff;
+  border:1px solid #d7e5df;
+  border-radius:17px;
+  box-shadow:0 10px 26px rgba(15,57,44,.045);
+  color:#203d34;
+}
+body.product-redesign .records-guide-icon {
+  display:grid;
+  place-items:center;
+  width:43px;
+  height:43px;
+  border-radius:13px;
+  background:#def4e9;
+  color:#0b745c;
+  font-size:21px;
+  font-weight:800;
+  margin-bottom:23px;
+}
+body.product-redesign .records-guide-kicker {
+  font-size:10px;
+  letter-spacing:.12em;
+  font-weight:800;
+  color:#16876a;
+}
+body.product-redesign .records-guide h2 {
+  margin:9px 0;
+  font:800 19px/1.3 Manrope,system-ui,sans-serif;
+  letter-spacing:-.03em;
+}
+body.product-redesign .records-guide p {
+  margin:9px 0 20px;
+  font-size:13px;
+  line-height:1.75;
+  color:#546c63;
+}
+body.product-redesign .records-guide-link {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:13px 15px;
+  border-radius:10px;
+  color:white;
+  font-size:12px;
+  font-weight:800;
+  background:#0e8269;
+}
+body.product-redesign .records-guide-link:hover,
+body.product-redesign .records-guide-link:focus-visible { background:#0a604f; }
+body.product-redesign .records-guide-text-link {
+  color:#0a775e;
+  text-decoration:underline;
+  text-underline-offset:3px;
+  font-size:12px;
+  font-weight:750;
+}
+body.product-redesign .records-guide-separator {
+  height:1px;
+  background:#e5eee9;
+  margin:24px 0;
+}
+/* Compact status bar. Warning/danger must stay visible if configuration is bad. */
+body.product-redesign #product-network .preview-note {
+  display:flex;
+  align-items:center;
+  min-height:0;
+  gap:12px;
+  margin:16px 0 25px;
+  padding:12px 16px;
+  background:#edf7f2;
+  border:1px solid #d1e9db;
+  border-left:4px solid #1d9a76;
+  border-radius:11px;
+  box-shadow:none;
+}
+body.product-redesign #product-network .preview-note strong {
+  font-size:12px;
+  line-height:1.45;
+  color:#235d4b;
+}
+body.product-redesign #product-network .network-message {
+  font-size:12px;
+  line-height:1.6;
+  overflow-wrap:anywhere;
+}
+body.product-redesign #product-network .preview-note:has(.network-message.warn) {
+  background:#fff9ec;
+  border-color:#eeddb5;
+  border-left-color:#b9852a;
+}
+body.product-redesign #product-network .preview-note:has(.network-message.warn) .preview-note-icon {
+  background:#fae6bc;
+  color:#85570e;
+}
+body.product-redesign #product-network .preview-note:has(.network-message.danger) {
+  background:#fff0ed;
+  border-color:#f0c5be;
+  border-left-color:#b94d41;
+}
+@media(max-width:1100px) {
+  body.product-redesign #history-view,
+  body.product-redesign #details-view {grid-template-columns:minmax(0,1fr);}
+  body.product-redesign .records-guide {max-width:none;}
+}
+@media(max-width:650px) {
+  body.product-redesign #history-view #history-status {margin:16px;}
+  body.product-redesign #history-view #history-list,
+  body.product-redesign #history-view #history-detail {padding-inline:16px;}
+  body.product-redesign #details-view #verification .panel-head {padding:15px 16px;}
+  body.product-redesign #details-view #transaction-status {margin:16px;}
+  body.product-redesign #details-view .evidence {padding-inline:16px;}
+  body.product-redesign #details-view .recovery-row {grid-template-columns:minmax(0,1fr);padding:16px;}
+  body.product-redesign #details-view .recovery-row button {width:100%;}
+  body.product-redesign .records-guide {padding:21px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  body.product-redesign .records-guide-link {transition:none;}
+}
+
+/* Setlora history empty-state copy polish — no financial-state changes. */
+body.product-redesign #history-view .history-empty {
+  padding: 24px;
+  border: 1px dashed #cbdfd4;
+  border-radius: 12px;
+  background: #fbfdfa;
+  color: #214c3e;
+}
+body.product-redesign #history-view .history-empty h3 {
+  margin: 0 0 8px;
+  font: 750 16px/1.45 Manrope, system-ui, sans-serif;
+}
+body.product-redesign #history-view .history-empty p {
+  margin: 0;
+  max-width: 55ch;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #547165;
+}

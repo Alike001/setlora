@@ -1,0 +1,238 @@
+/* Setlora mobile inner-layout correction.
+   It is loaded LAST. Do not conceal root overflow: shrink the components.
+   Navigation is intentionally independently horizontally scrollable. */
+@media (max-width: 900px) {
+  body.product-redesign .product-shell,
+  body.product-redesign .product-content,
+  body.product-redesign .product-pane,
+  body.product-redesign #payment-flow,
+  body.product-redesign .workspace,
+  body.product-redesign .editor,
+  body.product-redesign .editor .table-wrap,
+  body.product-redesign .page-intro,
+  body.product-redesign .steps-nav {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+  body.product-redesign .product-content,
+  body.product-redesign .product-pane,
+  body.product-redesign #payment-flow,
+  body.product-redesign .workspace,
+  body.product-redesign .editor {
+    width: 100%;
+  }
+  /* The old table wrapper can retain an independent horizontal scrollport.
+     Recipient rows are now cards and must shrink rather than scroll sideways. */
+  body.product-redesign .editor,
+  body.product-redesign .editor .table-wrap {
+    overflow: visible;
+  }
+  body.product-redesign .workspace {
+    display: block;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.product-redesign .page-intro {
+    display: block;
+    width: 100%;
+  }
+  body.product-redesign .page-intro > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+  body.product-redesign .page-intro :is(h1, p),
+  body.product-redesign .panel-head :is(h2, p),
+  body.product-redesign .preview-note :is(strong, .network-message) {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  body.product-redesign .product-topline,
+  body.product-redesign #product-network,
+  body.product-redesign .preview-note,
+  body.product-redesign .editor .panel-head,
+  body.product-redesign .editor .editor-footer {
+    min-width: 0;
+    max-width: 100%;
+  }
+  body.product-redesign .preview-note > div {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  body.product-redesign .mobile-workspace-nav {
+    max-width: 100%;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    white-space: nowrap;
+  }
+  body.product-redesign .mobile-workspace-nav > a {
+    flex: 0 0 auto;
+  }
+}
+@media (max-width: 600px) {
+  body.product-redesign .product-content { padding-inline: 14px; }
+  /* Allow each step label to wrap within one third of the phone. */
+  body.product-redesign .steps-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0,1fr));
+    align-items: start;
+    justify-content: stretch;
+    column-gap: 7px;
+    margin-bottom: 18px;
+  }
+  body.product-redesign .steps-nav > i { display: none; }
+  body.product-redesign .steps-nav > div {
+    min-width: 0;
+    gap: 5px;
+    align-items: center;
+  }
+  body.product-redesign .steps-nav > div strong {
+    min-width: 0;
+    max-width: none;
+    font-size: 10px;
+    line-height: 1.35;
+    overflow-wrap: normal;
+    white-space: normal;
+  }
+  body.product-redesign .steps-nav > div span { flex: 0 0 24px; }
+  body.product-redesign .editor .panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 20px 16px;
+  }
+  body.product-redesign .editor .panel-head > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+  body.product-redesign .head-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  body.product-redesign .editor .table-wrap { padding: 12px 10px 0; }
+  body.product-redesign .editor table,
+  body.product-redesign .editor tbody,
+  body.product-redesign #invoice-rows { display: block; min-width: 0; width: 100%; }
+  body.product-redesign #invoice-rows tr {
+    box-sizing: border-box;
+    display: grid;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas:
+      "heading remove"
+      "invoice amount"
+      "recipient recipient"
+      "note note";
+    gap: 12px 10px;
+    padding: 14px;
+    margin-inline: 0;
+  }
+  body.product-redesign #invoice-rows tr > td {
+    box-sizing: border-box;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+    padding: 0;
+  }
+  body.product-redesign #invoice-rows tr > td:nth-child(1) { grid-area: invoice; }
+  body.product-redesign #invoice-rows tr > td:nth-child(2) { grid-area: recipient; }
+  body.product-redesign #invoice-rows tr > td:nth-child(3) { grid-area: amount; }
+  body.product-redesign #invoice-rows tr > td:nth-child(4) { grid-area: note; }
+  body.product-redesign #invoice-rows tr > td:nth-child(5) {
+    grid-area: remove;
+    display: flex;
+    justify-content: flex-end;
+    align-self: start;
+  }
+  body.product-redesign #invoice-rows tr input {
+    display: block;
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    font-size: 16px; /* Prevents automatic zoom on mobile Safari. */
+  }
+  body.product-redesign #invoice-rows .invoice-field-label {
+    display: block;
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.4;
+  }
+  body.product-redesign .editor-footer {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 16px;
+    gap: 12px;
+  }
+  body.product-redesign .editor-footer > * { min-width: 0; max-width: 100%; }
+  body.product-redesign .editor-footer .button.primary { width: 100%; }
+  body.product-redesign #prepare-feedback {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.product-redesign .mobile-workspace-nav { scroll-behavior: auto; }
+}
+
+
+/* SETLORA MOBILE FINISH */
+
+/* Recipient cards already provide their own field labels. */
+.product-redesign .editor .table-wrap thead {
+  display: none;
+}
+
+@media (max-width: 650px) {
+  .product-redesign .steps-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    align-items: start;
+  }
+
+  .product-redesign .steps-nav > i {
+    display: none;
+  }
+
+  .product-redesign .steps-nav > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    text-align: center;
+  }
+
+  .product-redesign .steps-nav > div strong {
+    max-width: none;
+    min-width: 0;
+    font-size: 11px;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .product-redesign .preview-note > div {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .product-redesign .network-message,
+  .product-redesign .page-intro p {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .product-redesign #invoice-rows input {
+    min-width: 0;
+    box-sizing: border-box;
+  }
+}

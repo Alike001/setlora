@@ -19,7 +19,7 @@ export function validateInvoices(rows, isAddress, decimals = 6) {
   const clean = rows.map((row, idx) => {
     const id = String(row.invoice ?? '').trim();
     if (!/^\d+$/.test(id) || BigInt(id) < 1n || BigInt(id) > UINT256_MAX) {
-      throw new Error(`Invoice ${idx + 1}: invoice number must be a positive integer`);
+      throw new Error(`Invoice row ${idx + 1}: enter a whole-number invoice ID using digits only (e.g. 4004). Check for an unused blank recipient row.`);
     }
     const canonicalId = BigInt(id).toString();
     if (seen.has(canonicalId)) throw new Error(`Invoice ${idx + 1}: repeated invoice number ${id}`);

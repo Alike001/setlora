@@ -1,3 +1,4 @@
+import './product-shell.js';
 import { ethers } from 'ethers';
 import { TOKEN, RPC, CONTRACT_ADDRESS, CHAIN_ID } from './config.js';
 import { validateInvoices, MAX_INVOICES, parseUnitsExact } from './invoice.js';
@@ -65,7 +66,14 @@ function restoreDraftForWallet() {
   persistDraft();
 }
 
-function setMessage(el, message, level = 'muted') { el.className = `message ${level}`; el.textContent = message; }
+function setMessage(el, message, level = 'muted') {
+  el.className = `message ${level}`;
+  el.textContent = message;
+  if (el.id === 'review-status') {
+    const mirror = document.getElementById('prepare-feedback');
+    if (mirror) { mirror.className = `message ${level}`; mirror.textContent = message; }
+  }
+}
 function ownsSavedTransaction() {
   return Boolean(session && typeof last?.payer === 'string' && last.payer.toLowerCase() === session.address.toLowerCase());
 }
@@ -96,6 +104,7 @@ function resetWalletState(message = 'Wallet disconnected. Connect to review acco
   setMessage($('network-status'), message, level);
   setMessage($('review-status'), 'Connect and review this batch before approving or settling.');
   updateTxBox(); buttons(); renderHistory();
+  if (window.location.hash === '#review') window.location.hash = '#pay';
 }
 function showConnectedWallet(address) {
   $('connect').hidden = true;
@@ -146,6 +155,8 @@ function resetReview() {
   renderReviewItems(null); renderRecipientChecks(null);
   setMessage($('review-status'), 'Invoice details changed. Review this batch again before approval or settlement.');
   updateSummary(); buttons();
+  // Any modification to the invoices invalidates the old review.
+  if (window.location.hash === '#review') window.location.hash = '#pay';
 }
 function renderRecipientChecks(result) {
   const panel = $('recipient-readiness');
@@ -183,8 +194,12 @@ function renderRecipientChecks(result) {
           ? 'input[aria-label^="pUSD amount"]'
           : 'input[aria-label^="Recipient wallet"]';
         const target = invoiceRow?.querySelector(field);
-        target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        target?.focus();
+        // The invoice editor now lives on a separate preparation screen.
+        if (window.location.hash === '#review') window.location.hash = '#pay';
+        requestAnimationFrame(() => {
+          target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          target?.focus();
+        });
       });
       actions.append(edit);
 
@@ -239,11 +254,24 @@ function renderRows() {
       input.type = 'text'; input.placeholder = placeholder; input.value = item[key] || '';
       input.inputMode = inputMode; input.setAttribute('aria-label', `${title} for row ${idx + 1}`);
       input.maxLength = key === 'note' ? 100 : 128;
-      input.addEventListener('input', () => { rows[idx][key] = input.value; resetReview(); persistDraft(); });
-      td.append(input); tr.append(td);
+      input.addEventListener('input', () => { input.removeAttribute('aria-invalid'); rows[idx][key] = input.value; resetReview(); persistDraft(); });
+      td.className = `invoice-field invoice-field--${key}`;
+
+      const label = document.createElement('label');
+      label.className = 'invoice-field-label';
+      label.htmlFor = `setlora-${key}-${idx}`;
+      label.textContent = {
+        invoice: 'Invoice number',
+        recipient: 'Recipient wallet address',
+        amount: 'Amount (pUSD)',
+        note: 'Payment reference (optional)'
+      }[key];
+
+      input.id = label.htmlFor;
+      td.append(label, input); tr.append(td);
     }
     const del = document.createElement('td');
-    const button = document.createElement('button'); button.type = 'button'; button.className = 'delete'; button.textContent = '×';
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'delete'; button.textContent = 'Remove';
     button.setAttribute('aria-label', `Remove invoice ${idx + 1}`); button.disabled = busy;
     button.addEventListener('click', () => { rows.splice(idx, 1); if (!rows.length) rows.push({ ...EMPTY_ROW }); renderRows(); resetReview(); persistDraft(); });
     del.append(button); tr.append(del); tbody.append(tr);
@@ -305,8 +333,12 @@ function renderHistory() {
   }
   const records=historyForWallet();
   if (!records.length) {
-    const empty=document.createElement('p'); empty.className='small-note';
-    empty.textContent='No saved completed payments yet. Verified payments will appear here. On a new browser, verify a previous hash above to add it.';
+    const empty=document.createElement('div'); empty.className='history-empty';
+    const heading=document.createElement('h3');
+    heading.textContent='No saved payments on this site';
+    const explanation=document.createElement('p');
+    explanation.textContent='This wallet has no payment records saved at this website address. Earlier payments may be stored in another browser or local development port. Their blockchain settlement can still be checked by transaction hash.';
+    empty.append(heading, explanation);
     listing.append(empty);
   }
   for (const record of records) {
@@ -610,6 +642,7 @@ async function reviewClick() {
       review = null;
       renderReviewItems(batch);
       setMessage($('review-status'), `Payment not ready: ${readiness.checks.filter(c=>c.status==='blocked').length} recipient(s) need attention. No approval or payment requested.`, 'warn');
+      window.location.hash = '#review';
       return;
     }
     review = batch;
@@ -619,7 +652,27 @@ async function reviewClick() {
     } else if (allowance < batch.total) {
       setMessage($('review-status'), `Recipient checks passed. Approve exactly ${amountText(batch.total)} pUSD in your wallet, then confirm the payment. Approval alone does not pay recipients.`, 'good');
     } else setMessage($('review-status'), `Ready for explicit settlement approval: ${batch.items.length} invoices, ${amountText(batch.total)} pUSD.`, 'good');
-  } catch (e) { review = null; if (session) showError(e); }
+    window.location.hash = '#review';
+  } catch (e) {
+    review = null;
+    showError(e);
+    // The validation error names the ROW position, not the invoice ID.
+    // Help users find blank or malformed invoice numbers without weakening validation.
+    const match = /^Invoice row (\d+):/.exec(String(e?.message ?? ''));
+    if (match) {
+      const rowIndex = Number(match[1]) - 1;
+      const field = $('invoice-rows').querySelectorAll('tr')[rowIndex]
+        ?.querySelector('input[aria-label^="Invoice number"]');
+      if (field) {
+        field.setAttribute('aria-invalid', 'true');
+        if (window.location.hash !== '#pay') window.location.hash = '#pay';
+        requestAnimationFrame(() => {
+          field.scrollIntoView({ block: 'center' });
+          field.focus({ preventScroll: true });
+        });
+      }
+    }
+  }
   finally { setBusy(false); }
 }
 async function approveClick() {
@@ -774,6 +827,7 @@ async function tryRestoreWallet() {
       setMessage($('network-status'), 'Contract configuration needs attention. Payment actions are disabled.', 'warn');
     }
     setMessage($('review-status'), 'Wallet restored. Review your invoices again before approving or settling.');
+    if (window.location.hash === '#review') window.location.hash = '#pay';
     // Receipt recovery uses read-only RPC queries and never authorizes payment.
     if (ownsSavedTransaction() && last?.hash) await checkTxClick();
   } catch {
