@@ -90,6 +90,60 @@ An end-to-end testnet batch was executed and checked on **October 31, 2026**:
 
 Tests in the workspace checked the successful transaction receipt, three `InvoiceSettled` events, the `BatchSettled` total, and `isSettled` flags. Subsequent read-only queries showed 0.10, 0.15 and 0.20 pUSD in the corresponding recipient accounts. This is testnet evidence, **not** an audit or proof of mainnet readiness.
 
+## Architecture and check-in progress
+
+```mermaid
+flowchart TD
+    A["Setlora web application"]
+    B["Payer-controlled EVM wallet"]
+    C["SetloraBatch contract"]
+    D["Portaldot test pUSD"]
+    E["EVM recipients"]
+    F["Portaldot V3 EVM RPC"]
+    G["Public payment verifier"]
+    H["Native account checker"]
+    I["Portaldot native RPC"]
+
+    A -->|Request approval and settlement| B
+    A -->|Read-only checks| F
+    B -->|Approve test pUSD| D
+    B -->|Sign batch| C
+    C -->|Atomic transfers| D
+    D --> E
+    C -->|Settlement events| F
+    G -->|Verify receipts and flags| F
+    H -->|Read-only account lookup| I
+```
+
+### Check-in progress — November 2, 2026
+
+**Implemented**
+
+- Self-custodial EVM batch payments for up to 10 invoices.
+- Atomic pUSD settlement and invoice replay prevention.
+- Wallet checks and recipient simulations.
+- Explicit token approval and settlement signatures.
+- Public wallet-free payment verification.
+- Read-only native account checker.
+- Saved drafts, payment history and receipt recovery.
+- Responsive interface and MDX documentation.
+
+**Verified Portaldot V3 testnet evidence**
+
+- Contract: `0x2d17199920251f7eec8a555043c8387194ff5d1b`
+- Transaction: `0x0ea4730fc73f3842a80f3015ee682ffa2bc0c5312fccf272d9899ee3ec1e3c16`
+- Three invoices settled for a total of 0.45 test pUSD.
+- Receipt, matching events, batch total and settlement flags checked.
+
+**Outstanding**
+
+- Final live-site walkthrough and check-in demonstration.
+- Additional wallet and recipient edge-case testing.
+- Final submission video and pitch materials.
+- Native-address payouts and cross-chain settlement remain future work.
+
+Setlora is experimental testnet software and has not been audited.
+
 ## Run locally
 
 Requirements: **Node.js 22+** and npm; **Foundry** for contract tests. To make testnet transactions, use an EVM wallet configured for Portaldot V3 Testnet and obtain test tokens for the payer. **Never put private keys or seed phrases in the repository.**
