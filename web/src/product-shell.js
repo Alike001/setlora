@@ -39,6 +39,7 @@
       <nav class="sidebar-nav">
         <a href="/proof.html">Verify a payment</a>
         <a href="/native.html">Check a recipient</a>
+        <a href="/docs/">Documentation</a>
       </nav>
 
       <div class="sidebar-bottom">
@@ -54,11 +55,12 @@
       <a href="#history" data-view="history">History</a>
       <a href="/proof.html">Verify payment</a>
       <a href="/native.html">Check recipient</a>
+      <a href="/docs/">Docs</a>
     </nav>
     <div class="product-content">
       <div class="product-topline">
         <span>Workspace / <strong id="active-section">Overview</strong></span>
-        <span class="product-context">Self-custodial payments</span>
+        <span class="product-context">Self-custodial payments · <a href="/docs/how-to-test/">How to test</a></span>
       </div>
 
       <div id="product-network"></div>
@@ -125,6 +127,7 @@
       <section class="product-pane" data-pane="pay" hidden>
         <div id="payment-flow"></div>
         <div id="prepare-feedback" class="message muted" role="status" aria-live="polite"></div>
+        <p class="product-guide-link"><a href="/docs/send-payments/">How to prepare and send payments ↗</a></p>
       </section>
 
       <section class="product-pane payment-review-pane" data-pane="review" hidden>
@@ -134,6 +137,7 @@
           <p>Check every recipient, the total, and wallet requirements before authorizing a transaction.</p>
         </div>
         <div id="review-panel"></div>
+        <p class="product-guide-link"><a href="/docs/send-payments/">Understand approval and settlement ↗</a></p>
         <div class="review-return-actions">
           <a href="#pay" data-view="pay" class="button subtle">← Edit batch</a>
           <a href="#details" data-view="details" class="review-evidence-link">Check previous payment evidence ↗</a>

@@ -9,13 +9,27 @@
   <link rel="icon" type="image/svg+xml" href="/setlora-icon.svg" />
   <link rel="stylesheet" href="/src/landing.css" />
   <link rel="stylesheet" href="/src/design-polish.css" />
+  <link rel="stylesheet" href="/src/landing-mobile-nav.css" />
 </head>
 <body class="polish-landing">
   <div class="announcement"><span class="status-dot"></span><span>Building on Portaldot V3 testnet</span><a href="/app.html">Explore the workspace <span aria-hidden="true">↗</span></a></div>
   <header class="site-header">
     <nav class="nav wrap" aria-label="Primary navigation">
       <a href="/" class="brand" aria-label="Setlora homepage"><span class="brand-symbol" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 28 28" fill="none"><path d="M7 9h13M7 14h10M7 19h7" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><path d="m16 19 2.7 2.7L24 16" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>setlora</span></a>
-      <div class="nav-links"><a href="#why">Why Setlora</a><a href="#how">How it works</a><a href="/proof.html">Verify a payment</a><a href="#trust">Security & status</a></div>
+      
+<details class="mobile-nav">
+  <summary>Menu <span aria-hidden="true">☰</span></summary>
+  <div class="mobile-nav-panel">
+    <a href="#why">Why Setlora</a>
+    <a href="#how">How it works</a>
+    <a href="/proof.html">Verify a payment</a>
+    <a href="#trust">Security &amp; status</a>
+    <a href="/docs/">Documentation</a>
+    <a href="/docs/how-to-test/">How to test</a>
+    <a class="mobile-open-app" href="/app.html">Open app ↗</a>
+  </div>
+</details>
+<div class="nav-links"><a href="#why">Why Setlora</a><a href="#how">How it works</a><a href="/proof.html">Verify a payment</a><a href="#trust">Security & status</a><a href="/docs/">Docs</a></div>
       <a class="button button-dark nav-cta" href="/app.html">Open app <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
@@ -57,6 +71,20 @@
     <section class="section trust-section wrap" id="trust"><div class="trust-copy"><div class="eyebrow"><span class="eyebrow-line"></span> BUILT FOR CONFIDENCE</div><h2>Clear approval.<br /><span>Clearer outcomes.</span></h2><p>Setlora doesn't hold your private keys. The wallet signs every action, and a settlement is marked confirmed only after evidence checks pass.</p><div class="trust-points"><div><span class="point-tick">✓</span><span>Separate token approval and settlement confirmations</span></div><div><span class="point-tick">✓</span><span>All-or-nothing execution for an entire batch</span></div><div><span class="point-tick">✓</span><span>Unknown status is never presented as success</span></div></div></div><div class="trust-facts"><div class="facts-label">CURRENT BUILD STATUS</div><div class="fact"><span class="fact-indicator ready"></span><div><strong>Contract logic</strong><span>Contract tests pass in GitHub CI</span></div><strong class="fact-status">Tested locally</strong></div><div class="fact"><span class="fact-indicator ready"></span><div><strong>Wallet mapping</strong><span>Portaldot native → MetaMask verified</span></div><strong class="fact-status">Verified</strong></div><div class="fact"><span class="fact-indicator ready"></span><div><strong>Setlora contract deployment</strong><span>Deployed on Portaldot V3 testnet</span></div><strong class="fact-status">Deployed</strong></div><div class="fact"><span class="fact-indicator ready"></span><div><strong>Live pUSD settlement</strong><span>3 invoices settled · 0.45 pUSD</span></div><strong class="fact-status">Verified</strong></div><p class="fact-note">This is testnet development software, not a production financial service or security-audited contract.</p></div></section>
     <section class="closing-cta wrap"><div><div class="eyebrow light">READY TO EXPLORE?</div><h2>Start with a batch.<br />Leave with a clear record.</h2><p>Explore the workflow without connecting a wallet. Real testnet payments require a wallet, test tokens, and explicit confirmation.</p></div><a href="/app.html" class="button button-green">Open Setlora <span aria-hidden="true">↗</span></a></section>
   </main>
-  <footer class="site-footer"><div class="wrap footer-row"><a class="brand footer-brand" href="/"><span class="brand-symbol" aria-hidden="true">✓</span><span>setlora</span></a><span>Built for Portaldot Hacker House 2026 · Testnet only</span><span>Self-custody by design. Verification over promises.</span></div></footer>
+  <footer class="site-footer"><div class="wrap footer-row"><a class="brand footer-brand" href="/"><span class="brand-symbol" aria-hidden="true">✓</span><span>setlora</span></a><span>Built for Portaldot Hacker House 2026 · Testnet only</span><a href="/docs/">Documentation</a><span>Self-custody by design. Verification over promises.</span></div></footer>
+
+<script>
+  const mobileMenu = document.querySelector(".mobile-nav");
+  mobileMenu.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => mobileMenu.open = false);
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && mobileMenu.open) {
+      mobileMenu.open = false;
+      mobileMenu.querySelector("summary").focus();
+    }
+  });
+</script>
+
 </body>
 </html>
