@@ -1,0 +1,27 @@
+---
+title: Getting started
+description: Understand Setlora's current capabilities and what you need before a test payment.
+---
+
+### What Setlora does
+
+Setlora lets a payer prepare several invoice-linked transfers in one **atomic** batch. If the smart-contract transaction fails, none of its transfers should remain completed from that transaction. Successful payments are checked against blockchain receipts, invoice events, batch totals, and settlement flags.
+
+A normal journey is: **Prepare invoices → Review and check recipients → Approve test pUSD (if needed) → Confirm the batch in your wallet → Verify evidence.**
+
+### What you need
+
+- **For browsing or public verification:** no wallet or tokens.
+- **For making a test payment:** an EVM-compatible browser wallet connected to Portaldot V3 Testnet, test pUSD, and testnet gas funds.
+- **For recipients in the current payment form:** valid EVM-format `0x...` addresses. Native SS58 addresses are not accepted for EVM batch settlement.
+
+Setlora is **non-custodial**. It does not collect your seed phrase or sign transactions for you. A token approval alone does not transfer money.
+
+### A first test without spending
+
+1. Open [Send payments](https://setlora.pages.dev/app) and enter a fresh invoice number, a valid EVM address and a positive pUSD amount.
+2. Click **Review batch**. This is a read-only check; it does not send a payment.
+3. Examine the invoice breakdown, recipient status, total, balance and allowance.
+4. Stop before **Approve** or **Confirm batch settlement** unless you explicitly intend to transact with test tokens.
+
+For an even faster judge walkthrough, use [How to test](/docs/how-to-test/).

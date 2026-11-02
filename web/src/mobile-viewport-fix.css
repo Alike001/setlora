@@ -1,0 +1,98 @@
+/* Setlora: targeted mobile layout correction.
+   Keep content inside the viewport without hiding interactive overflow.
+   Only the navigation rail scrolls horizontally. */
+@media (max-width: 900px) {
+  body.product-redesign #app,
+  body.product-redesign main,
+  body.product-redesign .product-shell {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+  body.product-redesign .product-content {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding: 18px;
+  }
+  body.product-redesign .mobile-workspace-nav {
+    box-sizing: border-box;
+    display: flex;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+  }
+  body.product-redesign .product-content > *,
+  body.product-redesign .product-pane,
+  body.product-redesign .product-topline,
+  body.product-redesign #product-network,
+  body.product-redesign #product-network .preview-note,
+  body.product-redesign [data-pane="review"] .review-page-heading,
+  body.product-redesign [data-pane="review"] #review-panel,
+  body.product-redesign [data-pane="review"] .summary,
+  body.product-redesign [data-pane="review"] .review-return-actions {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+  body.product-redesign #product-network .preview-note > div,
+  body.product-redesign #product-network .network-message {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  body.product-redesign [data-pane="review"] .review-page-heading h1,
+  body.product-redesign [data-pane="review"] .review-page-heading p {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  body.product-redesign [data-pane="review"] .summary {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  body.product-redesign [data-pane="review"] .summary > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+  body.product-redesign [data-pane="review"] .review-item,
+  body.product-redesign [data-pane="review"] .readiness-row {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  body.product-redesign .topbar-inner {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+@media (max-width: 600px) {
+  body.product-redesign .product-content { padding: 14px; }
+  body.product-redesign [data-pane="review"] .summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  body.product-redesign [data-pane="review"] .summary > .metric,
+  body.product-redesign [data-pane="review"] .summary > #recipient-readiness,
+  body.product-redesign [data-pane="review"] .summary > #review-items,
+  body.product-redesign [data-pane="review"] .summary > #approve,
+  body.product-redesign [data-pane="review"] .summary > #settle {
+    grid-column: 1 / -1;
+  }
+  body.product-redesign [data-pane="review"] .review-page-heading h1 {
+    font-size: clamp(27px, 8vw, 34px);
+    line-height: 1.18;
+  }
+  body.product-redesign .topbar-inner { gap: 8px; padding-inline: 12px; }
+  body.product-redesign .right-head { min-width: 0; }
+  body.product-redesign .wallet-menu { max-width: 100%; }
+  body.product-redesign .review-return-actions { flex-wrap: wrap; }
+}

@@ -1,0 +1,89 @@
+/* Dedicated review screen. Existing wallet/payment controls stay intact. */
+.product-redesign .workspace {
+  display: block;
+  width: 100%;
+  max-width: 1020px;
+  margin-inline: auto;
+}
+.product-redesign .workspace .editor {
+  width: 100%;
+}
+.product-redesign .payment-review-pane {
+  max-width: 950px;
+  margin-inline: auto;
+}
+.product-redesign .review-page-heading {
+  padding: 38px 0 22px;
+}
+.product-redesign .review-page-heading h1 {
+  font: 800 clamp(30px, 3vw, 43px) Manrope, sans-serif;
+  letter-spacing: -.05em;
+  margin: 9px 0;
+  color: #153632;
+}
+.product-redesign .review-page-heading p {
+  font-size: 14px;
+  color: #536e66;
+  max-width: 660px;
+  line-height: 1.65;
+}
+.product-redesign .payment-review-pane .summary {
+  position: static;
+  width: 100%;
+  max-width: none;
+  padding: clamp(22px, 3vw, 38px);
+  border: 1px solid #d8e7df;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 14px 35px #123b2810;
+}
+.product-redesign .payment-review-pane .summary .metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 18px;
+  padding-block: 15px;
+  border-bottom: 1px solid #e8f0eb;
+}
+.product-redesign .payment-review-pane .summary .metric span {
+  color: #526b61;
+  font-size: 14px;
+}
+.product-redesign .payment-review-pane #total {
+  font-size: 23px;
+  color: #0e7158;
+}
+.product-redesign .payment-review-pane .recipient-readiness,
+.product-redesign .payment-review-pane .review-items {
+  display: grid;
+  gap: 10px;
+  margin-block: 16px;
+}
+.product-redesign .payment-review-pane .summary .button.wide {
+  width: 100%;
+  min-height: 50px;
+  margin-block: 8px;
+}
+.product-redesign .review-return-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+}
+.product-redesign .review-evidence-link {
+  font-size: 13px;
+  color: #08795d;
+  font-weight: 750;
+}
+.product-redesign #prepare-feedback {
+  max-width: 1020px;
+  margin: 16px auto 20px;
+  font-size: 13px;
+}
+.product-redesign #prepare-feedback:empty { display: none; }
+@media (max-width: 600px) {
+  .product-redesign .review-return-actions { align-items: stretch; flex-direction: column; }
+  .product-redesign .review-return-actions > * { text-align: center; }
+  .product-redesign .review-page-heading { padding-top: 24px; }
+}

@@ -9,6 +9,13 @@
   <link rel="icon" type="image/svg+xml" href="/setlora-icon.svg" />
   <!-- Load workspace styles before rendering HTML to prevent a flash of unstyled markup. -->
   <link rel="stylesheet" href="/src/styles.css" />
+  <link rel="stylesheet" href="/src/product-shell.css" />
+  <link rel="stylesheet" href="/src/payment-form-v2.css" />
+  <link rel="stylesheet" href="/src/payment-review.css" />
+  <link rel="stylesheet" href="/src/records-layout.css" />
+  <link rel="stylesheet" href="/src/design-polish.css" />
+  <link rel="stylesheet" href="/src/review-refined.css" />
+  <link rel="stylesheet" href="/src/mobile-layout.css" />
 </head>
 <body>
   <div id="app">
@@ -62,7 +69,7 @@
           <div class="small-note">If token approval is already sufficient, you can skip it. Otherwise approval and payment require separate wallet confirmations. Approval alone does not pay anyone.</div>
         </aside>
       </section>
-      <section class="panel audit" id="verification"><div class="panel-head"><div><div class="eyebrow">STEP 03 · PROOF</div><h2>Settlement evidence</h2><p>Confirmed means the blockchain receipt, invoice events and settlement flags all match.</p></div><button class="button subtle" id="check-tx" disabled>Recheck last transaction ↻</button></div><div id="transaction-status" class="message muted" role="status" aria-live="polite">No transaction has been submitted from this browser.</div><div class="evidence" id="evidence"></div><div class="recovery-row"><label for="manual-hash">Verify an existing Setlora payment (read-only)</label><input id="manual-hash" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="66" placeholder="0x… 64 hex characters" aria-describedby="transaction-status"/><button class="button subtle" id="restore-hash" disabled>Verify previous payment</button></div><div class="verification-footer"><span>Receipts are checked against the configured Setlora contract.</span><button class="text-button" id="export-receipt" disabled>Export verified JSON receipt ↓</button></div></section>
+      <section class="panel audit" id="verification"><div class="panel-head"><div><div class="eyebrow">STEP 03 · PROOF</div><h2>Settlement evidence</h2><p>Confirmed means the blockchain receipt, invoice events and settlement flags all match.</p></div><button class="button subtle" id="check-tx" disabled>Recheck last transaction ↻</button></div><div id="transaction-status" class="message muted" role="status" aria-live="polite">No transaction has been submitted from this browser.</div><div class="evidence" id="evidence"></div><div class="recovery-row"><label for="manual-hash">Recheck or recover a payment for this wallet (read-only)</label><input id="manual-hash" type="text" inputmode="text" autocomplete="off" spellcheck="false" maxlength="66" placeholder="0x… 64 hex characters" aria-describedby="transaction-status"/><button class="button subtle" id="restore-hash" disabled>Verify previous payment</button></div><div class="verification-footer"><span>Receipts are checked against the configured Setlora contract.</span><button class="text-button" id="export-receipt" disabled>Export verified JSON receipt ↓</button></div></section>
       <section class="panel audit" id="payment-history" aria-labelledby="payment-history-title">
         <div class="panel-head"><div><div class="eyebrow">YOUR PAYMENTS</div><h2 id="payment-history-title">Payment history</h2><p>Revisit your completed payments and download a receipt after checking the blockchain again.</p></div></div>
         <div id="history-status" class="message muted" role="status" aria-live="polite">Previously verified payments are saved on this browser. Recheck them before exporting proof.</div>
@@ -116,6 +123,7 @@
     .wallet-empty, .wallet-picker-hint { font-size: 13px; }
     [hidden] { display: none !important; }
   </style>
+  
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

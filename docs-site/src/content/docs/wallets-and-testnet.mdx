@@ -1,0 +1,27 @@
+---
+title: Wallets and testnet
+description: Understand wallet requirements and the difference between EVM and native accounts.
+---
+
+### Current settlement network
+
+| Setting | Value |
+| --- | --- |
+| Network | Portaldot V3 Testnet |
+| EVM chain ID | `420420777` |
+| Token | Test pUSD, 6 decimals |
+| Test token contract | `0x00001E6100000000000000000000000000010000` |
+| Settlement contract | `0x2d17199920251f7eec8a555043c8387194ff5d1b` |
+
+These are **testnet identifiers**, not instructions to deposit real money. Confirm network configuration in the current official Portaldot documentation and your wallet before using test tokens.
+
+### Wallet safety
+
+Setlora uses the wallet you explicitly connect. For financial actions, your wallet must authorize token approval and later confirm the batch settlement transaction. Never paste a seed phrase or private key into Setlora, GitHub issues, or a documentation form.
+
+### EVM versus native addresses
+
+- **EVM `0x...`:** supported by the current batch-payment form.
+- **Native SS58 `5...`:** supported by the separate read-only account checker, **not** current EVM batch payouts.
+
+Official test pUSD and testnet gas distribution may change. Setlora does not claim an unrestricted public faucet, and it does not automatically provision wallets or fund recipients.

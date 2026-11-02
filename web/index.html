@@ -5,16 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#f7faf8" />
   <meta name="description" content="Setlora helps onchain teams prepare, approve, settle, and reconcile invoice-linked payments in one batch. Explore the Portaldot V3 testnet workspace." />
-  <title>Setlora — Pay the team. Not the same invoice twice.</title>
+  <title>Setlora — Batch payments with verifiable receipts.</title>
   <link rel="icon" type="image/svg+xml" href="/setlora-icon.svg" />
   <link rel="stylesheet" href="/src/landing.css" />
+  <link rel="stylesheet" href="/src/design-polish.css" />
 </head>
-<body>
+<body class="polish-landing">
   <div class="announcement"><span class="status-dot"></span><span>Building on Portaldot V3 testnet</span><a href="/app.html">Explore the workspace <span aria-hidden="true">↗</span></a></div>
   <header class="site-header">
     <nav class="nav wrap" aria-label="Primary navigation">
       <a href="/" class="brand" aria-label="Setlora homepage"><span class="brand-symbol" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 28 28" fill="none"><path d="M7 9h13M7 14h10M7 19h7" stroke="currentColor" stroke-width="2.7" stroke-linecap="round"/><path d="m16 19 2.7 2.7L24 16" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>setlora</span></a>
-      <div class="nav-links"><a href="#why">Why Setlora</a><a href="#how">How it works</a><a href="#trust">Security & status</a></div>
+      <div class="nav-links"><a href="#why">Why Setlora</a><a href="#how">How it works</a><a href="/proof.html">Verify a payment</a><a href="#trust">Security & status</a></div>
       <a class="button button-dark nav-cta" href="/app.html">Open app <span aria-hidden="true">↗</span></a>
     </nav>
   </header>
@@ -22,7 +23,7 @@
     <section class="hero wrap">
       <div class="hero-copy">
         <div class="eyebrow"><span class="eyebrow-line"></span> PAYMENTS WITHOUT THE PAPER CHASE</div>
-        <h1>Pay the team.<br /><span>Not the same</span><br />invoice twice.</h1>
+        <h1>Send payments.<br /><span>One batch.</span><br />Clear proof.</h1>
         <p class="hero-description">Stop juggling wallet transfers, invoice numbers, and payment screenshots. Prepare multiple payouts, authorize one atomic batch, and keep every settlement accounted for.</p>
         <div class="hero-buttons"><a class="button button-green" href="/app.html">Try the testnet workspace <span aria-hidden="true">↗</span></a><a class="text-link" href="/proof.html">Verify a real payment <span aria-hidden="true">↗</span></a></div>
         <p class="preview-caveat"><span class="preview-dot"></span> Portaldot V3 testnet · Test tokens only · Not audited</p>
@@ -31,15 +32,23 @@
         <div class="visual-glow"></div>
         <div class="visual-card">
           <div class="visual-card-top"><div class="tiny-label">PAYMENT REVIEW <span class="example-pill">ILLUSTRATION</span></div><span class="visual-menu">•••</span></div>
-          <div class="visual-heading">October contributor payouts</div>
+          <div class="visual-heading">October payment batch</div>
           <div class="visual-description">3 invoice-linked payments</div>
-          <div class="payee-row"><div class="avatar teal">AD</div><div class="payee-description"><strong>Design contributor</strong><span>Invoice #1041 · 0xa3…17e2</span></div><span class="payee-amount">120.00 <small>pUSD</small></span></div>
-          <div class="payee-row"><div class="avatar lavender">DV</div><div class="payee-description"><strong>Development contributor</strong><span>Invoice #1042 · 0x4b…0a91</span></div><span class="payee-amount">250.00 <small>pUSD</small></span></div>
-          <div class="payee-row"><div class="avatar peach">QA</div><div class="payee-description"><strong>QA contributor</strong><span>Invoice #1043 · 0x9e…4cf8</span></div><span class="payee-amount">80.00 <small>pUSD</small></span></div>
+          <div class="payee-row"><div class="avatar teal">AD</div><div class="payee-description"><strong>Freelance designer</strong><span>Invoice #1041 · 0xa3…17e2</span></div><span class="payee-amount">120.00 <small>pUSD</small></span></div>
+          <div class="payee-row"><div class="avatar lavender">DV</div><div class="payee-description"><strong>Equipment supplier</strong><span>Invoice #1042 · 0x4b…0a91</span></div><span class="payee-amount">250.00 <small>pUSD</small></span></div>
+          <div class="payee-row"><div class="avatar peach">QA</div><div class="payee-description"><strong>Event organizer</strong><span>Invoice #1043 · 0x9e…4cf8</span></div><span class="payee-amount">80.00 <small>pUSD</small></span></div>
           <div class="review-footer"><span>Batch total</span><strong>450.00 <small>pUSD</small></strong></div>
           <div class="visual-action"><span class="check-icon" aria-hidden="true">✓</span> One batch. Explicit approval.</div>
         </div>
         <div class="receipt-float"><span class="receipt-symbol">✓</span><div><strong>Payment proof, built in</strong><span>Receipt + invoice matching</span></div></div>
+      </div>
+    </section>
+    <section class="quickstart wrap" aria-labelledby="quickstart-title">
+      <div class="quickstart-heading"><div><div class="eyebrow">GET STARTED</div><h2 id="quickstart-title">What would you like to do?</h2></div><p>Choose one workflow. Exploring and verifying require no wallet.</p></div>
+      <div class="quickstart-grid">
+        <a class="quickstart-card" href="/app.html#pay"><span class="quickstart-number">01 · PAY</span><strong>Create a payment</strong><small>Prepare recipients, review exact amounts, then authorize with your wallet.</small><span aria-hidden="true" class="quickstart-arrow">↗</span></a>
+        <a class="quickstart-card" href="/proof.html?tx=0x0ea4730fc73f3842a80f3015ee682ffa2bc0c5312fccf272d9899ee3ec1e3c16"><span class="quickstart-number">02 · VERIFY</span><strong>Explore a real settlement</strong><small>Independently check the verified three-recipient 0.45 pUSD testnet batch.</small><span aria-hidden="true" class="quickstart-arrow">↗</span></a>
+        <a class="quickstart-card" href="/native.html"><span class="quickstart-number">03 · LOOKUP</span><strong>Check a recipient</strong><small>Read native asset-account information without connecting a wallet.</small><span aria-hidden="true" class="quickstart-arrow">↗</span></a>
       </div>
     </section>
     <section class="benefit-strip" id="why"><div class="wrap strip-grid"><div><span class="mini-icon">01</span><strong>Fewer manual steps</strong><span>Prepare up to ten payouts together</span></div><div><span class="mini-icon">02</span><strong>No accidental replay</strong><span>Contract-enforced invoice number checks</span></div><div><span class="mini-icon">03</span><strong>Traceable outcomes</strong><span>Verify receipts and settlement flags</span></div></div></section>

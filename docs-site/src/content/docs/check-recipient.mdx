@@ -1,0 +1,30 @@
+---
+title: Check a recipient
+description: Read native account and pUSD asset-record information before attempting a payment.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+[Open the native account checker](https://setlora.pages.dev/native)
+
+### How to use the checker
+
+1. Open **Check a recipient**.
+2. Paste a supported native `5...` (SS58) address or EVM `0x...` address, or select one of the provided test examples.
+3. Click **Check account**.
+4. Read the **asset account** state, **pUSD balance**, network and latest observed block, if available.
+
+This read-only lookup checks **pUSD asset ID 7777** on Portaldot V3 Testnet. It does not connect a wallet, request a signature, or activate/fund the recipient.
+
+### What the labels mean
+
+- **Existing pUSD holder:** the native asset storage query returned a liquid pUSD asset-account record.
+- **No pUSD record:** the lookup did not find an asset account, but that alone does not prove an incoming transfer is impossible.
+- **Account setup may be required:** the account has no sufficient native existence evidence for a non-sufficient asset; more checks may be needed.
+- **RPC unavailable:** the network did not answer reliably. Try again later rather than assuming the account is missing.
+
+<Aside type="caution" title="Native account != EVM recipient readiness">
+A native account lookup is **not** an EVM transfer simulation and does not guarantee an address can receive a future EVM payout. For current batch payments, use supported **EVM 0x addresses** and the payment workspace's read-only recipient simulation.
+</Aside>
+
+Setlora currently does **not** automatically fund accounts, collect private keys, activate asset accounts, or send native SS58 payouts.

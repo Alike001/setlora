@@ -1,0 +1,16 @@
+{
+  "name": "setlora-docs",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1 --port 4321",
+    "build": "astro build",
+    "preview": "astro preview --host 127.0.0.1 --port 4321",
+    "check:content": "node scripts/check-content.mjs"
+  },
+  "dependencies": {
+    "astro": "^7.4.4",
+    "@astrojs/starlight": "^0.42.8"
+  }
+}

@@ -1,0 +1,280 @@
+/* Setlora payment experience — redesigned form */
+
+body.product-redesign {
+  --form-ink: #173530;
+  --form-muted: #567269;
+  --form-line: #d6e4dd;
+  --form-focus: #11876b;
+}
+
+.product-redesign #product-network .preview-note {
+  background: #f1f8f5;
+  border-color: #d9e9e1;
+}
+
+.product-redesign .editor,
+.product-redesign .summary {
+  border: 1px solid var(--form-line);
+  border-radius: 18px;
+  box-shadow: 0 10px 28px #163f3009;
+}
+
+.product-redesign .editor .panel-head {
+  padding: 28px;
+  align-items: center;
+  border-bottom: 1px solid #e5eee9;
+}
+
+.product-redesign .editor .panel-head h2 {
+  font-size: 24px;
+  letter-spacing: -.04em;
+}
+
+.product-redesign .editor .panel-head p {
+  font-size: 13px;
+  color: var(--form-muted);
+}
+
+.product-redesign .head-actions {
+  gap: 10px;
+  margin-top: 0;
+}
+
+.product-redesign .head-actions .button {
+  min-height: 44px;
+  font-size: 13px;
+}
+
+.product-redesign .editor-toolbar {
+  padding: 20px 28px 0;
+  background: white;
+  border: 0;
+  color: var(--form-muted);
+  font-size: 12px;
+}
+
+.product-redesign .editor .table-wrap {
+  overflow: visible;
+  padding: 16px 22px 8px;
+}
+
+.product-redesign .editor table,
+.product-redesign .editor tbody {
+  display: block;
+  width: 100%;
+}
+
+.product-redesign .editor thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.product-redesign #invoice-rows {
+  counter-reset: recipient;
+}
+
+.product-redesign #invoice-rows tr {
+  counter-increment: recipient;
+  display: grid;
+  grid-template-columns:
+    minmax(105px,.8fr)
+    minmax(0,2fr)
+    minmax(0,1fr)
+    80px;
+  grid-template-areas:
+    "heading heading heading remove"
+    "invoice recipient amount amount"
+    "note note note note";
+  gap: 16px 14px;
+  padding: 21px;
+  margin-bottom: 14px;
+  border: 1px solid #dce9e3;
+  border-radius: 14px;
+  background: #fafcfb;
+}
+
+.product-redesign #invoice-rows tr::before {
+  content: "Recipient " counter(recipient, decimal-leading-zero);
+  grid-area: heading;
+  align-self: center;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--form-ink);
+}
+
+.product-redesign #invoice-rows td {
+  display: block;
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  text-align: left;
+}
+
+.product-redesign #invoice-rows td::before {
+  content: none !important;
+  display: none !important;
+}
+
+.product-redesign #invoice-rows td:nth-child(1) { grid-area: invoice; }
+.product-redesign #invoice-rows td:nth-child(2) { grid-area: recipient; }
+.product-redesign #invoice-rows td:nth-child(3) { grid-area: amount; }
+.product-redesign #invoice-rows td:nth-child(4) { grid-area: note; }
+
+.product-redesign #invoice-rows td:nth-child(5) {
+  grid-area: remove;
+  display: flex;
+  justify-content: flex-end;
+  align-items: start;
+}
+
+.product-redesign .invoice-field-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #425e55;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.product-redesign #invoice-rows input,
+.product-redesign #invoice-rows td:nth-child(2) input,
+.product-redesign #invoice-rows td:nth-child(3) input {
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  background: white;
+  border: 1px solid #cbdcd3;
+  border-radius: 10px;
+  color: var(--form-ink);
+  font-size: 14px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.product-redesign #invoice-rows .invoice-field--recipient input {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 13px;
+}
+
+.product-redesign #invoice-rows input:focus {
+  border-color: var(--form-focus);
+  box-shadow: 0 0 0 3px #168c712b;
+}
+
+.product-redesign #invoice-rows .delete {
+  width: auto;
+  min-width: 76px;
+  height: 36px;
+  padding: 0 11px;
+  border: 1px solid #e6dcd6;
+  border-radius: 9px;
+  background: white;
+  color: #995449;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.product-redesign #invoice-rows .delete:hover:enabled {
+  background: #fff4f1;
+  border-color: #d7b3ab;
+}
+
+.product-redesign .editor-footer {
+  padding: 22px 28px;
+  border-top: 1px solid #e5eee9;
+  background: white;
+}
+
+.product-redesign .editor-footer .button.primary {
+  min-height: 48px;
+  padding-inline: 22px;
+  font-size: 13px;
+}
+
+.product-redesign .summary {
+  padding: 27px;
+}
+
+.product-redesign .summary h2 {
+  font-size: 23px;
+}
+
+.product-redesign .summary .metric {
+  padding: 15px 0;
+  font-size: 13px;
+}
+
+.product-redesign .summary .metric strong {
+  font-size: 17px;
+}
+
+.product-redesign .summary .button.wide {
+  min-height: 48px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+.product-redesign .summary .small-note {
+  font-size: 12px;
+  color: #62796e;
+}
+
+@media (max-width: 980px) {
+  .product-redesign #invoice-rows tr {
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr) 82px;
+    grid-template-areas:
+      "heading heading remove"
+      "invoice amount amount"
+      "recipient recipient recipient"
+      "note note note";
+  }
+}
+
+@media (max-width: 580px) {
+  .product-redesign .editor .panel-head {
+    padding: 20px;
+  }
+
+  .product-redesign .editor-toolbar {
+    padding: 16px 18px 0;
+  }
+
+  .product-redesign .editor .table-wrap {
+    padding: 14px 12px 0;
+  }
+
+  .product-redesign #invoice-rows tr {
+    grid-template-columns: minmax(0,1fr) minmax(0,1fr);
+    grid-template-areas:
+      "heading remove"
+      "invoice amount"
+      "recipient recipient"
+      "note note";
+    padding: 16px;
+    gap: 13px 10px;
+  }
+
+  .product-redesign #invoice-rows input {
+    font-size: 16px;
+  }
+
+  .product-redesign .editor-footer {
+    padding: 18px;
+  }
+
+  .product-redesign .editor-footer .button.primary {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-redesign #invoice-rows input {
+    transition: none;
+  }
+}

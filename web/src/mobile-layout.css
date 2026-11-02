@@ -1,0 +1,335 @@
+/* Setlora consolidated mobile design.
+   Retires older mobile overrides, not the financial logic. No blanket
+   overflow-x:hidden: the only intentional horizontal scroll is nav / inputs. */
+body.product-redesign .mobile-workspace-nav { display: none; }
+
+@media (max-width: 900px) {
+  body.product-redesign #app,
+  body.product-redesign .product-shell,
+  body.product-redesign .product-content,
+  body.product-redesign .product-pane,
+  body.product-redesign #payment-flow,
+  body.product-redesign #product-network {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body.product-redesign .product-shell { display: block; }
+  body.product-redesign .product-sidebar { display: none !important; }
+  body.product-redesign .product-content { display: block; padding: 22px; }
+  body.product-redesign .product-content > *,
+  body.product-redesign .product-pane > *,
+  body.product-redesign #payment-flow > * { box-sizing: border-box; min-width: 0; max-width: 100%; }
+
+  body.product-redesign .mobile-workspace-nav {
+    box-sizing: border-box;
+    position: sticky;
+    top: 68px;
+    z-index: 22;
+    display: flex !important;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 7px;
+    width: 100%;
+    max-width: 100%;
+    min-height: 58px;
+    padding: 9px 14px;
+    border-bottom: 1px solid #d5e5dd;
+    background: white;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  body.product-redesign .mobile-workspace-nav a {
+    display: inline-flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    min-height: 40px;
+    padding: 10px 13px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 750;
+    line-height: 1.25;
+    text-decoration: none;
+    white-space: nowrap;
+    color: #385a4d;
+  }
+  body.product-redesign .mobile-workspace-nav a[aria-current="page"] {
+    color: #075e46;
+    background: #dcf7eb;
+    border-color: #bbdfce;
+  }
+  body.product-redesign .mobile-workspace-nav a:focus-visible {
+    outline: 3px solid #087859;
+    outline-offset: 2px;
+  }
+
+  body.product-redesign .workspace {
+    display: block !important;
+    grid-template-columns: minmax(0,1fr) !important;
+    width: 100%;
+    min-width: 0;
+  }
+  body.product-redesign .workspace .editor,
+  body.product-redesign .editor .table-wrap,
+  body.product-redesign .editor table,
+  body.product-redesign .editor tbody,
+  body.product-redesign #invoice-rows {
+    box-sizing: border-box;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  body.product-redesign .editor,
+  body.product-redesign .editor .table-wrap { overflow: visible; }
+  body.product-redesign .editor .table-wrap thead { display: none !important; }
+  body.product-redesign .editor table,
+  body.product-redesign .editor tbody { display: block; }
+
+  body.product-redesign .page-intro {
+    display: block !important;
+    width: 100%;
+    min-width: 0;
+  }
+  body.product-redesign .page-intro > *,
+  body.product-redesign .panel-head > * { min-width: 0; max-width: 100%; }
+  body.product-redesign .page-intro :is(h1, p),
+  body.product-redesign .panel-head :is(h2, p),
+  body.product-redesign .review-page-heading :is(h1, p) {
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+  body.product-redesign .preview-note,
+  body.product-redesign .preview-note > div,
+  body.product-redesign #product-network .network-message {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+  body.product-redesign .preview-note > div { flex: 1 1 0%; }
+  body.product-redesign #product-network .network-message {
+    display: block;
+    width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+
+  body.product-redesign .payment-review-pane,
+  body.product-redesign .payment-review-pane #review-panel,
+  body.product-redesign .payment-review-pane .summary,
+  body.product-redesign .review-return-actions {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+@media (max-width: 650px) {
+  body.product-redesign .topbar-inner {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    padding-inline: 12px;
+    gap: 8px;
+  }
+  body.product-redesign .right-head,
+  body.product-redesign .wallet-menu { min-width: 0; max-width: 100%; }
+  body.product-redesign .mobile-workspace-nav { top: 65px; }
+  body.product-redesign .product-content { padding: 14px; }
+  body.product-redesign .product-topline { min-width: 0; }
+  body.product-redesign #product-network .preview-note {
+    display: flex;
+    align-items: flex-start;
+    padding: 13px;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  /* The prior overrides constrained widths but let text run off the right.
+     Reserve space and force the actual copy to wrap within its content box. */
+  body.product-redesign #payment-flow .page-intro {
+    box-sizing: border-box;
+    width: 100% !important;
+    padding: 22px 0 16px !important;
+    overflow: visible;
+  }
+  body.product-redesign #payment-flow .page-intro h1 {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: clamp(27px, 8vw, 34px) !important;
+    line-height: 1.15;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+  }
+  body.product-redesign #payment-flow .page-intro p {
+    display: block !important;
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-right: 16px !important;
+    margin: 0 !important;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    overflow: visible !important;
+  }
+
+  body.product-redesign #payment-flow .steps-nav {
+    display: grid !important;
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    align-items: start;
+    justify-content: stretch;
+    margin: 0 0 17px;
+  }
+  body.product-redesign #payment-flow .steps-nav > i { display: none !important; }
+  body.product-redesign #payment-flow .steps-nav > div {
+    box-sizing: border-box;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100%;
+    padding: 0 2px;
+    gap: 5px;
+    text-align: center;
+  }
+  body.product-redesign #payment-flow .steps-nav > div > span {
+    display: grid;
+    place-items: center;
+    flex: 0 0 25px;
+    width: 25px;
+    height: 25px;
+  }
+  body.product-redesign #payment-flow .steps-nav > div > strong {
+    display: block !important;
+    box-sizing: border-box;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    font-size: 10px;
+    line-height: 1.4;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    text-align: center;
+  }
+
+  body.product-redesign .editor .panel-head {
+    box-sizing: border-box;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 19px 15px;
+    width: 100%;
+  }
+  body.product-redesign .editor .panel-head p {
+    width: 100%;
+    padding-right: 12px;
+    line-height: 1.6;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+  body.product-redesign .editor .head-actions {
+    box-sizing: border-box;
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  body.product-redesign .editor .table-wrap { padding: 12px 10px 0; }
+  body.product-redesign #invoice-rows tr {
+    box-sizing: border-box;
+    display: grid !important;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    grid-template-areas:
+      'heading remove'
+      'invoice amount'
+      'recipient recipient'
+      'note note' !important;
+    gap: 12px 10px;
+    padding: 14px;
+    margin: 0 0 12px;
+  }
+  body.product-redesign #invoice-rows tr > td {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    width: auto;
+    padding: 0;
+  }
+  body.product-redesign #invoice-rows tr > td:nth-child(1) { grid-area: invoice; }
+  body.product-redesign #invoice-rows tr > td:nth-child(2) { grid-area: recipient; }
+  body.product-redesign #invoice-rows tr > td:nth-child(3) { grid-area: amount; }
+  body.product-redesign #invoice-rows tr > td:nth-child(4) { grid-area: note; }
+  body.product-redesign #invoice-rows tr > td:nth-child(5) {
+    grid-area: remove;
+    display: flex;
+    justify-content: flex-end;
+    align-items: start;
+  }
+  body.product-redesign #invoice-rows td::before { content: none !important; }
+  body.product-redesign #invoice-rows .invoice-field-label {
+    display: block;
+    max-width: 100%;
+    margin-bottom: 7px;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+  body.product-redesign #invoice-rows tr input {
+    box-sizing: border-box;
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 48px;
+    padding: 0 12px;
+    font-size: 16px;
+    overflow-x: auto; /* Full long address remains keyboard/touch accessible. */
+  }
+  body.product-redesign .editor-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+    gap: 12px;
+  }
+  body.product-redesign .editor-footer > * { max-width: 100%; min-width: 0; }
+  body.product-redesign .editor-footer .button.primary { width: 100%; }
+  body.product-redesign .payment-review-pane .summary {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    padding: 17px;
+    grid-template-columns: minmax(0,1fr) !important;
+  }
+  body.product-redesign .payment-review-pane .summary > * { max-width: 100%; min-width: 0; }
+  body.product-redesign .review-return-actions { flex-wrap: wrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.product-redesign .mobile-workspace-nav { scroll-behavior: auto; }
+}
