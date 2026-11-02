@@ -1,0 +1,39 @@
+---
+title: Send payments
+description: Prepare, review, and settle invoice-linked testnet batch payments.
+---
+
+### Before you begin
+
+Connect a supported **EVM** wallet to Portaldot V3 Testnet. You need test pUSD and testnet gas to actually transact, but no balance is required to understand the public interface.
+
+### Step 1 — Create invoices
+
+1. Open [New payment](https://setlora.pages.dev/app).
+2. For each recipient, enter an **invoice number**, **EVM wallet address**, and **amount in pUSD**. A payment reference is optional.
+3. Add up to **10** recipients, or import a CSV with the headers `invoice,recipient,amount,note`.
+4. Confirm the total before continuing.
+
+**Invoice number rule:** enter a positive **whole number** with digits only, such as `4001`. Do not type `#4001`, `0`, `4001.5`, or `Invoice 4001`. Every invoice number must be unique within the batch, and the contract prevents the same payer from settling an invoice ID twice.
+
+If you see **“invoice number must be a positive integer”**, check every recipient card, including any newly added blank row. Remove an unused row or enter a valid invoice number.
+
+**Amount rule:** greater than zero, with no more than **six decimal places** (pUSD uses six decimals in this implementation).
+
+### Step 2 — Review and check
+
+Click **Review batch**. Setlora checks invoice IDs, addresses, balances, previous settlement flags, and read-only recipient transfer readiness where available. **Reviewing does not sign or transfer anything.**
+
+Recipient readiness is a simulation and **does not guarantee** the transaction will succeed later.
+
+### Step 3 — Explicitly authorize a test payment
+
+If the token allowance is insufficient, use **Approve exact token amount** and confirm in your wallet. Once the approval is effective, **Confirm batch settlement** is a separate wallet transaction. The application must not mark settlement successful from the approval alone.
+
+### Step 4 — Verify the evidence
+
+A transaction hash alone is not proof. Setlora checks the receipt, expected invoice events, batch total and on-chain flags before reporting the payment confirmed. You can independently check a hash on the [public verifier](https://setlora.pages.dev/proof).
+
+### Saved drafts and history
+
+Drafts and history are associated with the paying wallet, network, contract and browser. They **do not sync automatically across browsers, devices, or local development ports**. Verify the transaction hash if a past payment does not appear.

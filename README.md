@@ -22,7 +22,7 @@ A real three-recipient batch was verified on Portaldot V3:
 - Total: 0.45 pUSD
 - Transaction: `0x0ea4730fc73f3842a80f3015ee682ffa2bc0c5312fccf272d9899ee3ec1e3c16`
 
-See the evidence section below for the payer, contract, and verification details. The current in-app recovery interface is payer-scoped; a wallet-free public receipt verifier is planned.
+See the evidence section below for the payer, contract, and verification details. The in-app recovery interface is payer-scoped. Anyone can check this recorded testnet transaction using the wallet-free public verifier at https://setlora.pages.dev/proof.
 
 ### Test with your own EVM wallet
 1. Connect a supported EVM browser wallet to Portaldot V3 Testnet (chain ID 420420777).

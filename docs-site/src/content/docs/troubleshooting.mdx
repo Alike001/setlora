@@ -1,0 +1,32 @@
+---
+title: Troubleshooting
+description: Resolve common invoice, wallet, testnet RPC and history issues safely.
+---
+
+### “Invoice number must be a positive integer”
+
+Enter **digits only**, greater than zero, such as `4001`. Check that there is no leading `#`, decimal point or blank invoice card. If you added an unused recipient, remove that row. The message's row number refers to the position of the entry, not the invoice ID itself.
+
+### “Repeated invoice number”
+
+A single batch cannot contain two identical invoice IDs. Also, the contract prevents a payer from settling an ID that payer already settled through the same contract. Choose a **new unpaid** invoice number instead of retrying an old one.
+
+### Recipient cannot receive pUSD
+
+Check the EVM address, network, and recipient readiness message. The separate native-account lookup is informational and is not a substitute for EVM transfer simulation. Do not bypass preflight checks.
+
+### Wallet restored: review again
+
+This is intentional. Reconnects, account/network changes or invoice edits invalidate the previous authorization review. Return to New payment and review the current batch again before any signature.
+
+### Payment history is empty
+
+History is stored locally for the payer, site origin, network and contract. It does not automatically sync between `localhost` ports or devices. Use the [public verifier](https://setlora.pages.dev/proof) with the transaction hash to inspect on-chain evidence.
+
+### RPC timeout or transaction status unknown
+
+A timeout is not the same as a failed transfer. Do **not** resubmit the payment blindly. Inspect wallet activity and use the verifier or recovery flow to recheck the original transaction.
+
+### Can I use native addresses for a batch?
+
+Not yet. Current batch settlement requires EVM `0x...` recipients. Native `5...` addresses are used only with the read-only account checker.

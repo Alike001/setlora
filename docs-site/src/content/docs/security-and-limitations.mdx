@@ -1,0 +1,28 @@
+---
+title: Security and limitations
+description: Important boundaries for Setlora's current testnet release.
+---
+
+### What Setlora does verify
+
+- The payer signs using their own EVM wallet; Setlora does not hold signing keys.
+- Token approval and settlement are **separate** wallet confirmations.
+- The batch contract is designed for **all-or-nothing EVM transfers** in a single transaction.
+- Invoice IDs are protected against repeated settlement for the same payer and contract.
+- Confirmation requires the expected receipt, invoice events, batch total, and on-chain invoice flags.
+- Unknown or incomplete chain evidence must remain unknown rather than being reported as success.
+
+### What Setlora does not do yet
+
+- Mainnet or real-money production payments
+- Independent security audit
+- Native SS58 payouts or sponsored account activation
+- Cross-chain settlement
+- Automatic history synchronization between browsers/devices
+- Guaranteed account readiness from a single native storage lookup
+
+### Privacy and records
+
+Invoice numbers and payment events are visible on-chain in the testnet route. Browser-local history is convenience data, not independent proof. Avoid including personal recipient details in shared screenshots or public bug reports.
+
+**Setlora is experimental Portaldot V3 Testnet software. Never treat it as an audited financial service.**

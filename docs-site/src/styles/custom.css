@@ -1,0 +1,11 @@
+/* Documentation-only branding. No payment/workspace selectors. */
+:root {
+  --sl-color-accent-low: #d9f6eb;
+  --sl-color-accent: #087b64;
+  --sl-color-accent-high: #073d34;
+}
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #0e433b;
+  --sl-color-accent: #67dec0;
+  --sl-color-accent-high: #d9f6eb;
+}

@@ -1,0 +1,30 @@
+---
+title: Verify a payment
+description: Check invoice events and settlement evidence from a transaction hash, without connecting a wallet.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+[Open the public payment verifier](https://setlora.pages.dev/proof)
+
+### How to verify
+
+1. Open the public payment verifier.
+2. Paste a complete transaction hash: `0x` followed by **64 hexadecimal characters**.
+3. Click **Verify payment**.
+4. Inspect the contract, payer, block, batch total, invoice amounts, recipients, and confirmation summary.
+5. Copy the shareable verification link if the result is verified.
+
+Use the documented [three-recipient example](/docs/how-to-test/) if you do not have your own transaction.
+
+### How to interpret the result
+
+- **Verified:** on-chain receipt, invoice events, batch total and payer-specific settlement flags match the expected Setlora contract.
+- **Not verified / mismatch:** required evidence is missing or inconsistent. Do not present the payment as complete.
+- **Unavailable / unknown:** the chain or RPC could not provide enough information. An outage is not evidence that the payment failed; do not blindly resend it.
+
+<Aside type="caution" title="A screenshot is not settlement proof">
+Only on-chain evidence can establish the testnet payment status. A browser-local payment history entry, approved token allowance or unverified transaction hash is not enough.
+</Aside>
+
+Public verification does **not** need a connected wallet and never sends a transaction.

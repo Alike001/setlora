@@ -1,0 +1,50 @@
+---
+title: How to test — judges
+description: Reproduce Setlora's public testnet evidence without installing a wallet or spending tokens.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+### Fast path: no wallet required
+
+1. Visit the [public payment verifier](https://setlora.pages.dev/proof).
+2. Select the real three-recipient testnet example (if shown), or paste the transaction hash below.
+3. Click **Verify payment** and inspect the result.
+4. Check that the report includes the expected contract, payer, **three invoice events**, **0.45 pUSD total** and on-chain settlement flags.
+5. Visit the [native account checker](https://setlora.pages.dev/native), use a provided test account example, and click **Check account**. This is read-only.
+
+**Recorded example transaction**
+
+```text
+0x0ea4730fc73f3842a80f3015ee682ffa2bc0c5312fccf272d9899ee3ec1e3c16
+```
+
+| Invoice | Amount | Expected result |
+| --- | ---: | --- |
+| 1001 | 0.10 pUSD | Settled |
+| 1002 | 0.15 pUSD | Settled |
+| 1003 | 0.20 pUSD | Settled |
+| **Total** | **0.45 pUSD** | **3 recipients** |
+
+<Aside type="note" title="RPC errors are not failed payments">
+If the testnet RPC is unavailable, show the result as unavailable or unknown. Do not infer a failed transfer solely from a timeout.
+</Aside>
+
+### Optional wallet-connected test
+
+Connect an EVM wallet on **Portaldot V3 Testnet** (chain ID `420420777`). Use a **fresh, unpaid invoice number**, a valid EVM recipient, and test pUSD. Review without signing. Approval and settlement are two separate wallet confirmations. Only transact if you intentionally want to test payment settlement.
+
+### Running the code locally
+
+```sh
+cd web
+npm ci
+npm test
+npm run build
+```
+
+The public source is at [Alike001/setlora](https://github.com/Alike001/setlora). Solidity/Foundry contract tests can be run separately from `contracts/`.
+
+### Scope of the demo
+
+This demonstrates the Portaldot V3 **EVM testnet route**. It does not demonstrate native SS58 payouts, funded account activation, mainnet payments or cross-chain settlement.
