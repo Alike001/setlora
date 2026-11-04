@@ -20,6 +20,7 @@ function mock() {
         if(p.switchError)throw p.switchError;
         if(p.changeChain)p.chain=HEX;
         if(p.emitSwitch)p.emit('chainChanged',p.chain);
+        if(p.postReadGate)p.readGate=p.postReadGate;
         return p.switchResult;
       }
       if(method==='eth_accounts')return p.account?[p.account]:[];
@@ -54,13 +55,13 @@ test('switch invalidates a prior reviewed signer even when the wallet emits no e
 test('user rejection returns clear cancelled guidance and makes no fallback request', async t=>{
   const p=setup(t);p.switchError=codeError(4001);
   await assert.rejects(switchWalletNetwork(p,HEX),e=>explainNetworkSwitchError(e).kind==='rejected');
-  assert.equal(switches(p).length,1);assert.equal(p.calls.length,1);assert.equal(p.chain,'0x1');
+  assert.equal(switches(p).length,1);assert.equal(p.calls.length,3);assert.equal(p.chain,'0x1');
 });
 
 test('unknown chain offers manual addition without wallet_addEthereumChain', async t=>{
   const p=setup(t);p.switchError=codeError(4902);
   await assert.rejects(switchWalletNetwork(p,HEX),e=>explainNetworkSwitchError(e).kind==='unknown-chain');
-  assert.equal(p.calls.length,1);
+  assert.equal(p.calls.length,3);
   assert.ok(!p.calls.some(c=>c.method==='wallet_addEthereumChain'));
 });
 
@@ -68,7 +69,7 @@ test('unsupported switching methods are explained for standard and legacy error 
   for(const code of [4200,-32601]) {
     const p=setup(t);p.switchError=codeError(code);
     await assert.rejects(switchWalletNetwork(p,HEX),e=>explainNetworkSwitchError(e).kind==='unsupported');
-    assert.equal(p.calls.length,1);
+    assert.equal(p.calls.length,3);
   }
 });
 
@@ -86,7 +87,7 @@ test('rapid repeated clicks do not queue duplicate switches', async t=>{
 });
 
 test('the switch lock includes post-switch verification, not just the wallet response', async t=>{
-  const p=setup(t);p.readGate=deferred();p.readStarted=deferred();const gate=p.readGate;
+  const p=setup(t);p.postReadGate=deferred();p.readStarted=deferred();const gate=p.postReadGate;
   const first=switchWalletNetwork(p,HEX);await p.readStarted.promise;
   await assert.rejects(switchWalletNetwork(p,HEX),e=>e.code===-32002);
   gate.resolve(HEX);assert.equal((await first).status,'switched');assert.equal(switches(p).length,1);
@@ -129,7 +130,7 @@ test('missing account permission on the wrong chain is not reported as a success
 });
 
 test('late stale RPC responses cannot override a newer V3 check after rapid events', async t=>{
-  const p=setup(t);p.readGate=deferred();p.readStarted=deferred();const old=p.readGate;
+  const p=setup(t);p.postReadGate=deferred();p.readStarted=deferred();const old=p.postReadGate;
   const first=switchWalletNetwork(p,HEX);await p.readStarted.promise;
   p.chain='0x1';p.emit('chainChanged','0x1');p.chain=HEX;p.emit('chainChanged',HEX);
   const result=await first;old.resolve('0x1');
@@ -155,4 +156,48 @@ test('a completed switch result cannot be applied after another wallet identity 
     p.chain='0x1';p.emit('chainChanged',p.chain);
     assert.throws(()=>walletState(p).assertRevision(result.revision),e=>e.code==='WALLET_STATE_CHANGED');
   }
+});
+
+
+test('fresh V3 identity skips the unnecessary switch, including missing account permission', async t=>{
+  for(const account of [A,null]) {
+    const p=setup(t);p.account=account;p.chain=HEX;
+    const phases=[];const result=await switchWalletNetwork(p,HEX,{onPhase:phase=>phases.push(phase)});
+    assert.equal(result.status,account?'already-correct':'needs-account');
+    assert.equal(switches(p).length,0);assert.deepEqual(phases,['checking']);
+    assert.deepEqual(p.calls.map(c=>c.method).sort(),['eth_accounts','eth_chainId']);
+  }
+});
+
+test('waiting and verification phases follow actual requests; an event alone never resolves switching', async t=>{
+  const p=setup(t);p.switchGate=deferred();p.started=deferred();const phases=[];
+  const first=switchWalletNetwork(p,HEX,{onPhase:phase=>phases.push(phase)});await p.started.promise;
+  assert.deepEqual(phases,['checking','waiting']);
+  p.emit('chainChanged',HEX); // The actual chain is still wrong and the request pending.
+  assert.deepEqual(phases,['checking','waiting']);
+  p.switchGate.resolve();const result=await first;
+  assert.equal(result.status,'switched');assert.deepEqual(phases,['checking','waiting','verifying']);
+  assert.equal(p.calls.filter(c=>c.method==='eth_chainId').length,2);
+});
+
+test('RPC failure checking current chain never dispatches a switch or authorizes payment', async t=>{
+  const p=setup(t);p.request=async()=>{throw new Error('RPC unavailable');};
+  await assert.rejects(switchWalletNetwork(p,HEX),/RPC unavailable/);
+  assert.equal(switches(p).length,0);
+});
+
+test('an old initial wrong-chain response cannot request a redundant switch after returning to V3', async t=>{
+  const p=setup(t);p.readGate=deferred();p.readStarted=deferred();const old=p.readGate;
+  const first=switchWalletNetwork(p,HEX);await p.readStarted.promise;
+  p.chain=HEX;p.emit('chainChanged',HEX);
+  assert.equal((await first).status,'already-correct');old.resolve('0x1');
+  assert.equal(switches(p).length,0);
+});
+
+test('repeated clicks during the initial network check cannot queue wallet requests', async t=>{
+  const p=setup(t);p.readGate=deferred();p.readStarted=deferred();const initial=p.readGate;
+  const first=switchWalletNetwork(p,HEX);await p.readStarted.promise;
+  await assert.rejects(switchWalletNetwork(p,HEX),e=>e.code===-32002);
+  assert.equal(switches(p).length,0);initial.resolve('0x1');
+  assert.equal((await first).status,'switched');assert.equal(switches(p).length,1);
 });

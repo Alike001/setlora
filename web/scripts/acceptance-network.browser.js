@@ -70,7 +70,7 @@ async (page) => {
     // Some providers delay or omit events. The click-time raw check still wins.
     await p.evaluate(()=>window.__network.chain='0x1');
     await p.locator('#settle').click();await waitIdle();
-    check('Silent chain change is caught before any settlement request', (await p.locator('#network-status').innerText()).includes('wrong network')&&await p.locator('#settle').isDisabled()&&await p.evaluate(()=>!window.__network.calls.includes('eth_sendTransaction')));
+    check('Silent chain change is caught before any settlement request', (await p.locator('#network-status').innerText()).toLowerCase().includes('wrong network')&&await p.locator('#settle').isDisabled()&&await p.evaluate(()=>!window.__network.calls.includes('eth_sendTransaction')));
     await p.evaluate(()=>window.__network.chain='0x190f1ca9');await connect();
     await p.evaluate(()=>location.hash='#pay');await p.locator('#review').click();await waitIdle();
 
@@ -91,9 +91,9 @@ async (page) => {
 
     // Genuine wrong-network connection must stay disabled; it never switches.
     await p.evaluate(()=>{const n=window.__network;n.chain='0x1';n.emit('chainChanged','0x1');});
-    await p.waitForFunction(()=>document.querySelector('#network-status').textContent.includes('wrong network'));
+    await p.waitForFunction(()=>document.querySelector('#network-status').textContent.toLowerCase().includes('wrong network'));
     await connect();
-    check('Wrong network remains an accurate connection error', (await p.locator('#network-status').innerText()).includes('wrong network')&&await p.locator('#settle').isDisabled());
+    check('Wrong network remains an accurate connection error', (await p.locator('#network-status').innerText()).toLowerCase().includes('wrong network')&&await p.locator('#settle').isDisabled());
     await p.evaluate(()=>window.__network.chain='0x190f1ca9'); await connect();
 
     // Close account/chain events race with an explicitly held raw network read.
@@ -121,7 +121,7 @@ async (page) => {
     await p.evaluate(()=>sessionStorage.setItem('test-chain','0x1'));await p.reload();await waitIdle();
     check('Refresh on another chain never restores payment readiness', await p.locator('#wallet-menu').isHidden()&&await p.locator('#settle').isDisabled());
     await connect();
-    check('Wrong chain after refresh remains explicit', (await p.locator('#network-status').innerText()).includes('wrong network'));
+    check('Wrong chain after refresh remains explicit', (await p.locator('#network-status').innerText()).toLowerCase().includes('wrong network'));
     await p.evaluate(()=>window.__network.chain='0x190f1ca9');await connect();
     check('Returning to V3 after refresh allows a new verified connection', await p.locator('#wallet-menu').isVisible());
     check('No automatic switching, signing, or transaction submission', await p.evaluate(()=>!window.__network.calls.some(m=>/switch|addEthereumChain|send|sign/i.test(m))));
@@ -142,7 +142,7 @@ async (page) => {
       const review=await p.evaluate(()=>({scroll:document.documentElement.scrollWidth,items:document.querySelectorAll('.review-item').length,button:document.querySelector('#settle').getBoundingClientRect().toJSON()}));
       check('Populated review remains readable at '+width+'px',review.scroll===width&&review.items===1&&review.button.width>0&&review.button.right<=width);
       await p.evaluate(()=>{location.hash='#pay';const n=window.__network;n.chain='0x1';n.emit('chainChanged','0x1');});
-      await p.waitForFunction(()=>document.querySelector('#network-status').textContent.includes('wrong network'));
+      await p.waitForFunction(()=>document.querySelector('#network-status').textContent.toLowerCase().includes('wrong network'));
       const metrics=await p.evaluate(()=>({scrollWidth:document.documentElement.scrollWidth,viewport:innerWidth,messageWidth:document.querySelector('#network-status').getBoundingClientRect().width,connect:document.querySelector('#connect').getBoundingClientRect().toJSON()}));
       check('Readable network error and connection controls at '+width+'px', metrics.scrollWidth===width&&metrics.messageWidth>0&&metrics.connect.right<=width&&metrics.connect.width>0);
       viewports.push({width,review,...metrics});

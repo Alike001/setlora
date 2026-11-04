@@ -5,47 +5,55 @@ const interrupted = () => Object.assign(new Error('Wallet disconnected during ne
 
 // Only the explicit switch-button handler calls this. This helper requests no
 // account permission, chain addition, token approval, signature or transaction.
-export async function switchWalletNetwork(provider, chainIdHex) {
+export async function switchWalletNetwork(provider, chainIdHex, { onPhase = () => {} } = {}) {
   if (!provider?.request) throw new Error('Select an installed EVM wallet first.');
   if (!/^0x[0-9a-f]+$/i.test(chainIdHex)) throw new Error('Invalid target chain ID.');
   if (pending.has(provider)) throw Object.assign(new Error('A network switch is already pending in this wallet.'), { code: -32002 });
   const state = walletState(provider);
-  const revision = state.invalidate(); // Invalidate old reviewed signers even without an event.
+  state.invalidate(); // Invalidate old reviewed signers even without an event.
   let rejectDisconnect;
   const disconnected = new Promise((_, reject) => { rejectDisconnect = reject; });
   const stop = state.subscribe(event => { if (event === 'disconnect') rejectDisconnect(interrupted()); });
-  // Retain the per-provider lock until the underlying request actually settles,
-  // even if disconnect makes the local operation return sooner.
   const token = {};
-  let requestSettled = false, finished = false;
+  let requestPending = false, finished = false;
   const release = () => {
-    if (requestSettled && finished && pending.get(provider) === token) pending.delete(provider);
+    if (!requestPending && finished && pending.get(provider) === token) pending.delete(provider);
   };
   pending.set(provider, token);
-  const request = Promise.resolve().then(() => {
-    state.assertRevision(revision);
-    return provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: chainIdHex }] });
-  });
-  void request.finally(() => {
-    requestSettled = true; release();
-  }).catch(() => {});
-  try {
-    await Promise.race([request, disconnected]);
+  const readLatest = async () => {
     for (let attempt = 0; attempt < 3; ++attempt) {
-      try {
-        const identity = await state.read();
-        assertWalletIdentity(identity, BigInt(chainIdHex));
-        return { status: 'switched', identity, revision: identity.revision };
-      } catch (error) {
+      try { return await state.read(); }
+      catch (error) {
         if (error.code === 'WALLET_ACCOUNT_UNAUTHORIZED') {
-          // A successful switch is not account authorization. Confirm the actual
-          // chain, but never open eth_requestAccounts as an implicit follow-up.
-          assertWalletIdentity({ chainId: error.chainId }, BigInt(chainIdHex));
-          return { status: 'needs-account', chainId: error.chainId, revision: error.revision };
+          // Missing permission is separate from network identity. Never prompt.
+          return { chainId: error.chainId, revision: error.revision };
         }
         if (error.code !== 'WALLET_STATE_CHANGED' || error.reason !== 'event' || attempt === 2) throw error;
       }
     }
+  };
+  try {
+    onPhase('checking');
+    let identity = await Promise.race([readLatest(), disconnected]);
+    state.assertRevision(identity.revision);
+    const alreadyCorrect = identity.chainId === BigInt(chainIdHex);
+    if (!alreadyCorrect) {
+      onPhase('waiting');
+      // Called only from the user's click path, on the exact selected provider.
+      // Do not defer dispatch to discovery, events, restoration or recovery.
+      state.assertRevision(identity.revision);
+      const request = Promise.resolve(provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: chainIdHex }] }));
+      requestPending = true;
+      // Keep the lock until the native request settles, even after disconnect.
+      void request.finally(() => { requestPending = false; release(); }).catch(() => {});
+      await Promise.race([request, disconnected]);
+      onPhase('verifying');
+      identity = await Promise.race([readLatest(), disconnected]);
+    }
+    state.assertRevision(identity.revision);
+    assertWalletIdentity(identity, BigInt(chainIdHex));
+    if (!identity.address) return { status: 'needs-account', chainId: identity.chainId, revision: identity.revision };
+    return { status: alreadyCorrect ? 'already-correct' : 'switched', identity, revision: identity.revision };
   } finally { finished = true; stop(); release(); }
 }
 

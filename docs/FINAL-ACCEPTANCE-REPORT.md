@@ -512,3 +512,47 @@ The new synthetic-browser harness **failed before the fix** at `revoked: neutral
 All **111 browser assertions** were executed against deterministic mocked providers or isolated synthetic payment boundaries. Existing network/switch harnesses also check 390px, 768px and 1440px. No installed-wallet acceptance or live publication verification is claimed. Existing documentation optional-collection/404 notices, dependency annotation/large-bundle warnings, and Foundry lint notices remain visible and nonfatal; no warning suppression or contract patch was introduced.
 
 **Recommendation remains CONDITIONAL GO for the locally tested testnet application. Real-wallet acceptance is still pending until manually verified.** In the actual MetaMask/Rabby browser, check a clean disconnected visit, revoked site access with a remembered record, a changed account, authorized restoration on both networks, explicit switch rejection/success, fresh review, and disconnect/refresh. Only approve account access or a network change; do not approve tokens, sign financial messages or send payments. These local changes require a separately authorized publication and subsequent production verification. No push, deployment, signature or blockchain transaction occurred during this fix. All unrelated untracked files, wallet backups and deployment evidence were preserved.
+
+## Wallet switch interaction and disconnect clarification — local acceptance
+
+Starting branch/HEAD: `main`, `631e4b80d8161ea5e26bc11f6bde45025e2e92b0`. The user reported that real MetaMask opened its home screen during switching, that the network subsequently changed, and that reconnect worked. This is a reported real-wallet observation, not a complete extension acceptance result. Absence of an obvious confirmation popup does not establish that the switch RPC failed; this audit did not reproduce or certify MetaMask's extension UI.
+
+### Trace and confirmed causes of confusion
+
+The actual request path is the `#switch-network` click listener → `switchNetworkClick()` → `switchWalletNetwork(choice.provider, CHAIN_ID_HEX)` → the selected provider's `request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x190f1ca9' }] })`. `choice` comes from the explicit wallet picker or verified remembered authorization. The switch never falls back to another extension through `window.ethereum`.
+
+The prior implementation already sent that RPC and checked raw identity afterward. It scheduled dispatch through a revision-guarded microtask; competing identity events invalidate reads, and the switching branch disables readiness rather than starting a competing reconnect. There is no evidence here that MetaMask's home screen meant an RPC failure. Confirmed interaction defects were an unconditional request even if the wallet had silently returned to V3, imprecise pending/success wording, and explicit disconnect setting **Reconnect wallet** after clearing the session.
+
+### Focused changes
+
+- The click path now reads fresh selected-provider account/chain state first, under the existing revision/sequence guards and bounded event retries. If V3 is already selected, it skips `wallet_switchEthereumChain` and reports the verified network. It never requests account permission as part of switching.
+- When a switch is needed, the helper calls the exact selected provider after that check, without scheduling dispatch in discovery or an event handler. The UI distinguishes **Checking the selected wallet network**, **Waiting for wallet confirmation**, and **Verifying the current wallet account and Portaldot V3 network**. It advises opening the selected wallet if needed, without promising a popup or imitating wallet UI.
+- Wrong-chain states say **Wrong network detected**. Success says **Portaldot V3 detected. Reconnect your wallet to continue**, followed by the fresh-review requirement. Missing account access remains a separate outcome. Events or a null RPC response alone never establish success: after a real switch request, a new raw account/chain read and current revision are required.
+- The per-provider lock covers the initial check, native wallet request and post-switch verification. Repeated clicks cannot queue duplicates. Disconnect cancels local work, and the lock outlives a still-pending native request. Existing rejection, unknown-network, pending-request, unsupported-method and RPC-failure feedback remains; unknown chains still use manual setup because complete official gas-currency metadata is unverified.
+- Explicit disconnect now leaves neutral **Connect wallet** guidance, clears selection/listeners/review, and preserves pending transaction evidence. Unsupported/rejected revocation still honestly directs users to wallet settings. Discovery and subsequent account/chain events cannot reconnect after local disconnect. A new explicit connection rechecks current chain/account; correct-chain connections use the normal authorization path, and wrong-chain connections retain their selected provider for switching.
+
+No Solidity, token/deployment constants, approval implementation, settlement implementation, payment encoding or CSS was changed. The existing authorization and pending-recovery safeguards remain in force. No automated permission request, network switch, approval or payment was added to page load, restoration or recovery.
+
+### Validation
+
+| Check | Result |
+| --- | --- |
+| Frontend `npm test`, Node 22.23.4 | **119 passed, 0 failed** |
+| Focused network-switch unit tests | **22 passed**, including 5 new cases for already-correct chain/missing permission, phase ordering/event-only behavior, RPC failure, stale initial responses and repeated clicks during initial verification |
+| Switch browser regression | **44 assertions passed** — exact provider/payload, one request, pending wording, success/reconnect, rejection, 4902, -32002, unsupported methods, RPC error, redundant-request avoidance and disconnect/reconnect on V3 and another chain |
+| Selection / network / safety / UI browser regressions | **28 / 24 / 21 / 7 assertions passed** |
+| Documentation `npm run check:content` | PASS — 9 MDX pages / 5 internal links |
+| Combined `npm run build:site` | PASS — documentation, frontend production build and combined outputs |
+| Required nonempty combined HTML outputs | PASS — the same nine routes listed above |
+| Foundry `forge test -vv` / `forge build` | PASS — **9 tests, 0 failures** |
+| Scope and whitespace review | PASS |
+
+All **124 browser assertions** used clearly identified synthetic providers or isolated application boundaries. Two announced providers verify that requests target the selected extension identity, with zero switch/financial requests to the other provider. Browser tests assert disabled financial controls during switching, after rejection, after disconnect and after a new connection until fresh review; no financial wallet RPC is sent. Existing responsive checks passed at 390px, 768px and 1440px. No fake MetaMask confirmation or popup was created.
+
+An initial added disconnect/reconnect test attempted to click Connect after its preceding case had already connected the wallet, and timed out on the correctly hidden button. The harness now checks connection state before requesting another connection; the full suite then passed. This was a test sequencing error, not an application connection failure. Existing nonfatal dependency annotation/large-bundle warnings, documentation optional i18n/custom-404 notices and Foundry lint warnings remain visible; none was suppressed.
+
+### Manual acceptance still required
+
+**CONDITIONAL GO remains limited to the locally tested testnet application.** In the actual MetaMask version/browser used by the reporter, record versions, actual active network, public app status and extension behavior. Test wrong-chain selection, explicit Switch, cancellation, pending requests, account changes, rapid chain changes, and success followed by explicit reconnect and Review only. Separately test an already-correct chain (no switch request expected), disconnect on both networks (neutral guidance, no automatic reconnect), and another installed wallet receiving no request. If the extension opens its home screen, inspect its pending requests and actual selected network; do not infer success or failure from the screen alone. Account access/network changes are the only permitted confirmations for this checklist: do not approve tokens, sign financial requests or settle payments.
+
+Real-extension acceptance of the revised flow remains pending. These changes are local and require separately authorized publication and production verification. Requests that never resolve still require the user to finish/dismiss them in the actual wallet or reload; no timeout automatically authorizes or resends anything. No push, deployment, private-key access, signature, token approval or blockchain transaction occurred in this work. Unrelated untracked files, backups and deployment evidence were preserved.

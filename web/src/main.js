@@ -480,7 +480,7 @@ async function assertPaymentWallet(snapshot, version) {
     assertSession(snapshot, version);
   } catch (error) {
     if (activeSession(snapshot, version)) {
-      resetWalletState(error?.message || 'Wallet network is unverified. Reconnect before paying.', 'warn', true, true);
+      resetWalletState(hasWrongWalletNetwork(error) ? 'Wrong network detected. Switch to Portaldot V3, then reconnect.' : error?.message || 'Wallet network is unverified. Reconnect before paying.', 'warn', true, true);
       networkCanSwitch = hasWrongWalletNetwork(error);
       $('connect').textContent = 'Reconnect wallet';
     }
@@ -506,7 +506,7 @@ function onWalletIdentityChanged() {
   if (switchingNetwork) {
     sessionReady = false; review = null;
     renderReviewItems(null); renderRecipientChecks(null); buttons();
-    setMessage($('network-status'), 'Wallet changed during the switch. Waiting to verify the latest account and network…', 'warn');
+    setMessage($('network-status'), 'Wallet state changed. Waiting for wallet confirmation or fresh network verification. Payment is disabled.', 'warn');
     return;
   }
   // The observer has already invalidated in-flight raw reads. During the
@@ -530,20 +530,19 @@ function onWalletIdentityChanged() {
     buttons();
     setMessage($('network-status'), identity.chainId === CHAIN_ID
       ? 'Portaldot V3 detected. Reconnect your wallet and review before paying.'
-      : 'Wallet is on the wrong network. Select Portaldot V3 Testnet in your wallet, then reconnect.', 'warn');
+      : 'Wrong network detected. Switch to Portaldot V3 Testnet, then reconnect.', 'warn');
   }).catch(error => {
     if (sessionVersion === version && connectedProvider === provider && error.code !== 'WALLET_STATE_CHANGED') {
       networkCanSwitch = hasWrongWalletNetwork(error);
       buttons();
       setMessage($('network-status'), networkCanSwitch
-        ? 'Wallet is on the wrong network and account access is missing. Switch to Portaldot V3, then reconnect.'
+        ? 'Wrong network detected. Switch to Portaldot V3, then reconnect to grant account access.'
         : 'Wallet network is unverified. Reconnect before paying.', 'warn');
     }
   });
 }
 function onProviderDisconnect() {
-  resetWalletState('Wallet disconnected. Reconnect before paying.', 'warn', true);
-  $('connect').textContent = 'Reconnect wallet';
+  resetWalletState('Wallet disconnected. Connect wallet to continue.', 'muted', true);
 }
 function unlistenWallet() {
   stopWalletObservation?.(); stopWalletObservation = null;
@@ -637,8 +636,10 @@ async function connectClick(choice, { selectAccount = false, previousAddress = n
       const wrongNetwork = hasWrongWalletNetwork(error);
       resetWalletState('Connection unsuccessful. No payment can be submitted.', 'warn', false, wrongNetwork);
       networkCanSwitch = wrongNetwork;
-      if (wrongNetwork && error.code === 'WALLET_ACCOUNT_UNAUTHORIZED') {
-        setMessage($('network-status'), 'Wallet is on the wrong network and account access is missing. Switch to Portaldot V3, then reconnect.', 'warn');
+      if (wrongNetwork) {
+        setMessage($('network-status'), error.code === 'WALLET_ACCOUNT_UNAUTHORIZED'
+          ? 'Wrong network detected. Switch to Portaldot V3, then reconnect to grant account access.'
+          : 'Wrong network detected. Switch to Portaldot V3 Testnet, then reconnect.', 'warn');
       } else showError(error, $('network-status'));
     }
   } finally {
@@ -880,7 +881,7 @@ async function tryRestoreWallet() {
     if (identity.chainId !== CHAIN_ID) {
       networkCanSwitch = true;
       $('connect').textContent = 'Reconnect wallet';
-      setMessage($('network-status'), 'Your previously authorized wallet is on the wrong network. Use Switch to Portaldot V3, then reconnect and review.', 'warn');
+      setMessage($('network-status'), 'Wrong network detected for your previously authorized wallet. Switch to Portaldot V3, then reconnect and review.', 'warn');
       return;
     }
     if (sessionVersion !== version) return;
@@ -925,18 +926,25 @@ async function tryRestoreWallet() {
 async function switchNetworkClick() {
   if (busy || switchingNetwork || !networkCanSwitch || !networkChoice) return;
   const choice = networkChoice, provider = choice.provider;
-  resetWalletState('Confirm the network switch in your selected wallet. Payment is disabled.', 'warn', false, true);
+  resetWalletState('Checking the selected wallet network. Payment is disabled.', 'warn', false, true);
   networkCanSwitch = true;
   const version = sessionVersion;
   switchingNetwork = true; setBusy(true);
   try {
-    const result = await switchWalletNetwork(provider, CHAIN_ID_HEX);
+    const result = await switchWalletNetwork(provider, CHAIN_ID_HEX, { onPhase(phase) {
+      if (sessionVersion !== version || networkChoice !== choice || connectedProvider !== provider) return;
+      setMessage($('network-status'), phase === 'waiting'
+        ? 'Waiting for wallet confirmation. Open your selected wallet if needed. Payment is disabled.'
+        : phase === 'verifying'
+          ? 'Verifying the current wallet account and Portaldot V3 network. Payment is disabled.'
+          : 'Checking the selected wallet network. Payment is disabled.', 'warn');
+    } });
     if (sessionVersion !== version || networkChoice !== choice || connectedProvider !== provider) return;
     walletState(provider).assertRevision(result.revision);
     networkCanSwitch = false;
     setMessage($('network-status'), result.status === 'needs-account'
       ? 'Portaldot V3 is selected, but no account is authorized. Reconnect your wallet to grant account access, then review again.'
-      : 'Switched to Portaldot V3. Reconnect the current wallet account and review your batch again before paying.', result.status === 'needs-account' ? 'warn' : 'good');
+      : 'Portaldot V3 detected. Reconnect your wallet to continue, then review your batch again before paying.', result.status === 'needs-account' ? 'warn' : 'good');
     $('connect').textContent = 'Reconnect wallet';
   } catch (error) {
     if (sessionVersion !== version || networkChoice !== choice || connectedProvider !== provider) return;
@@ -974,7 +982,6 @@ async function disconnectWalletClick() {
   if (busy) return;
   const provider = session?.provider;
   resetWalletState('Disconnecting wallet…', 'muted', true);
-  $('connect').textContent = 'Reconnect wallet';
   setBusy(true);
   try {
     if (!provider?.request) throw new Error('The selected wallet is unavailable.');
@@ -993,18 +1000,18 @@ async function disconnectWalletClick() {
     }
     if (Array.isArray(accounts) && accounts.length === 0) {
       setMessage($('network-status'),
-        'Wallet disconnected.', 'good');
+        'Wallet disconnected. Connect wallet to continue.', 'muted');
     } else {
       setMessage($('network-status'),
-        'Wallet disconnected. You can remove site access in your wallet settings.', 'warn');
+        'Wallet disconnected. Connect wallet to continue. You can remove site access in your wallet settings.', 'muted');
     }
   } catch (error) {
     // Do not claim successful revocation if a wallet lacks the method,
     // rejects the request, or fails to respond. The local logout still works.
     setMessage($('network-status'),
-      'Wallet disconnected. You can remove site access in your wallet settings.', 'warn');
+      'Wallet disconnected. Connect wallet to continue. You can remove site access in your wallet settings.', 'muted');
   } finally {
-    $('connect').textContent = 'Reconnect wallet';
+    $('connect').textContent = 'Connect wallet';
     setBusy(false);
   }
 }

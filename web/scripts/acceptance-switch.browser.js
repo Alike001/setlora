@@ -67,21 +67,24 @@ async (page) => {
     await choose();
     check('Wrong selected wallet shows Switch in network status area',await p.locator('#switch-network').isVisible()&&await p.locator('#network-actions').evaluate(e=>!!e.closest('.preview-note')));
     check('Selecting a wallet does not switch automatically',await count()===0);
+    check('Wrong network message is explicit',(await p.locator('#network-status').innerText()).includes('Wrong network detected'));
     const recovery=JSON.stringify({status:'unknown',hash:null,payer:'0x9999999999999999999999999999999999999999',items:[{invoice:'9',recipient:'0x3333333333333333333333333333333333333333',amount:'10000'}],chainId:'420420777',contract:'0x2d17199920251f7eec8a555043c8387194ff5d1b'});
     await p.evaluate(value=>{localStorage.setItem('setlora:pending:v2',value);localStorage.setItem('test-switch-recovery',value);window.__switch.mode='hold';},recovery);
     await p.locator('#switch-network').evaluate(button=>{button.click();button.click();});
     await p.waitForFunction(()=>window.__switch.pending);
     check('Double click sends exactly one switch to the selected provider',await count()===1&&await p.evaluate(()=>window.__switch.otherCalls.length===0));
     check('Switch uses config chain ID hex',await p.evaluate(()=>window.__switch.calls.find(c=>c.method==='wallet_switchEthereumChain').params[0].chainId==='0x190f1ca9'));
+    check('Pending request shows Waiting for wallet confirmation',(await p.locator('#network-status').innerText()).includes('Waiting for wallet confirmation'));
     check('Switching disables payment and repeated switching',await p.locator('#approve').isDisabled()&&await p.locator('#settle').isDisabled()&&await p.locator('#switch-network').isDisabled());
     await p.evaluate(()=>{const s=window.__switch;s.account='0x2222222222222222222222222222222222222222';s.emit('accountsChanged',[s.account]);s.chain='0x1';s.emit('chainChanged','0x1');s.chain='0x190f1ca9';s.emit('chainChanged',s.chain);s.resolve();});await idle();
-    check('Success verifies latest account/network and requires reconnect', (await p.locator('#network-status').innerText()).includes('Switched to Portaldot V3')&&await p.locator('#wallet-menu').isHidden()&&await p.locator('#settle').isDisabled());
+    check('Success verifies latest account/network and requires reconnect', (await p.locator('#network-status').innerText()).includes('Portaldot V3 detected. Reconnect your wallet to continue')&&await p.locator('#wallet-menu').isHidden()&&await p.locator('#settle').isDisabled());
+    check('Post-switch verification queried fresh selected-wallet identity',await p.evaluate(()=>window.__switch.calls.filter(c=>c.method==='eth_chainId').length>=3));
     check('Switch preserves pending recovery information',await p.evaluate(()=>localStorage.getItem('setlora:pending:v2')===localStorage.getItem('test-switch-recovery')));
     await choose();
     check('Explicit reconnect uses changed account',await p.locator('#wallet-address').getAttribute('title')==='0x2222222222222222222222222222222222222222');
     await p.evaluate(()=>{window.__switch.chain='0x1';window.__switch.emit('chainChanged','0x1');});
     await p.waitForFunction(()=>!document.querySelector('#switch-network').hidden);
-    for(const[code,text]of[[4001,'cancelled'],[4200,'does not support'],[-32601,'does not support'],[-32002,'pending']]){
+    for(const[code,text]of[[4001,'cancelled'],[4200,'does not support'],[-32601,'does not support'],[-32002,'pending'],[-32603,'could not be verified']]){
       await p.evaluate(code=>window.__switch.mode=code,code);const before=await count();
       await p.locator('#switch-network').click();await idle();
       check('Clear switch error '+code,(await p.locator('#network-status').innerText()).includes(text)&&await count()===before+1&&await p.locator('#settle').isDisabled());
@@ -122,6 +125,22 @@ async (page) => {
     check('Network change clears the old reviewed batch',await p.locator('.review-item').count()===0&&await p.locator('#settle').isDisabled());
     await p.evaluate(()=>window.__switch.mode='noop');await p.locator('#switch-network').click();await idle();
     check('Null response on wrong chain is not shown as success',(await p.locator('#network-status').innerText()).includes('still on the wrong network')&&await p.locator('#settle').isDisabled());
+    // The wallet silently returns to V3 before a click: verify without switching.
+    await p.evaluate(()=>window.__switch.chain='0x190f1ca9');const beforeAlready=await count();
+    await p.locator('#switch-network').click();await idle();
+    check('Already-correct chain avoids a redundant switch',await count()===beforeAlready&&(await p.locator('#network-status').innerText()).includes('Portaldot V3 detected'));
+    for(const chain of ['0x190f1ca9','0x1']) {
+      await p.evaluate(()=>{window.__switch.chain='0x190f1ca9';window.__switch.mode='success';});
+      if(await p.locator('#wallet-menu').isHidden())await choose();
+      const pendingBefore=await p.evaluate(()=>localStorage.getItem('setlora:pending:v2'));
+      await p.locator('#wallet-address').click();await p.locator('#disconnect-wallet').click();await idle();
+      check('Explicit disconnect is neutral before reconnect to '+chain,(await p.locator('#connect').innerText())==='Connect wallet'&&await p.locator('#switch-network').isHidden()&&(await p.locator('#network-status').innerText()).includes('Connect wallet to continue')&&await p.locator('#settle').isDisabled());
+      await p.evaluate(chain=>{window.__switch.chain=chain;window.__switch.emit('chainChanged',chain);window.dispatchEvent(new Event('eip6963:requestProvider'));},chain);
+      check('Discovery/events cannot reconnect after disconnect '+chain,await p.locator('#wallet-menu').isHidden()&&await p.locator('#switch-network').isHidden()&&await p.evaluate(value=>localStorage.getItem('setlora:pending:v2')===value,pendingBefore));
+      const switchesBefore=await count();await choose();
+      check('New connection rechecks actual chain '+chain,chain==='0x1'?await p.locator('#switch-network').isVisible()&&await p.locator('#settle').isDisabled():await p.locator('#wallet-menu').isVisible()&&await p.locator('#switch-network').isHidden()&&await p.locator('#settle').isDisabled());
+      check('New connection never automatically switches '+chain,await count()===switchesBefore&&await p.evaluate(()=>window.__switch.otherCalls.length===0));
+    }
     check('No add-chain, financial signature, or transaction request',await p.evaluate(()=>!window.__switch.calls.some(c=>/addEthereumChain|send|sign|approve/i.test(c.method))));
     check('No browser runtime errors',errors.length===0);
     return{assertions:results,viewports};
