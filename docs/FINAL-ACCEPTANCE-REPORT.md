@@ -6,16 +6,16 @@
 
 Conditions before calling the final public release accepted:
 
-1. Resolve or explicitly accept the fast network-switch connection defect F05, and complete a real browser-wallet smoke matrix. Current evidence for wallet interaction is synthetic, not a MetaMask/Rabby extension certification.
-2. Publish only through a separately authorized release step, then recheck the four local fixes on the live site. Nothing was pushed or deployed during this audit; production is not claimed to contain these fixes.
+1. Complete a real browser-wallet smoke matrix for the Phase 3B fix. F05 is fixed locally with deterministic unit/browser coverage; extension acceptance remains pending. Current evidence for wallet interaction is synthetic, not a MetaMask/Rabby extension certification.
+2. Publish only through a separately authorized release step, then recheck the Phase 3 and Phase 3B fixes on the live site. Nothing was pushed or deployed during this audit; production is not claimed to contain these fixes.
 3. Retain the testnet-only limitations and unknown-transaction recovery guidance. Further security work remains necessary before any mainnet consideration.
 
-No unsafe broadcast or false chain confirmation was observed in the exercised scenarios. That is bounded evidence, not an independent security audit or exhaustive verification. The full-functionality objective remains conditional because of F05 and the explicitly untested scenarios below.
+No unsafe broadcast or false chain confirmation was observed in the exercised scenarios. That is bounded evidence, not an independent security audit or exhaustive verification. Phase 3B closes the reproduced F05 defect locally. The final public release remains conditional on real wallet-extension acceptance, an authorized publication and the explicitly untested scenarios below.
 
 ## Scope and evidence boundaries
 
 - Audit date: **November 4, 2026**.
-- Starting branch/HEAD: `main`, `547c59cb5130cabb5d6705d7ca818b9580ac6a30`.
+- Phase 3 starting branch/HEAD: `main`, `547c59cb5130cabb5d6705d7ca818b9580ac6a30`; Phase 3B starts from acceptance commit `dae19a5c43c15bbc33a9f72361db5013cea6bfe2`.
 - Acceptance criteria: the Phase 3 request; implementation references: [current status](STATUS.md), [settlement specification](SETTLEMENT-SPEC.md), [threat model](THREAT-MODEL.md), application source and existing frontend/Foundry tests.
 - Local validation runtime: **Node.js 22.23.4**, Foundry 1.8.5. Documentation requires a supported Node patch; an earlier Phase 2 run established that Node 22.23.3 is insufficient.
 - Browser evidence: Chromium through Playwright, the configured Vite source app at port 5174, the combined production output at port 4175, and `https://setlora.pages.dev/`.
@@ -32,11 +32,11 @@ Evidence labels used below: **unit** means a local automated helper/contract tes
 | F02 | `invoice,recipient,recipient,amount` silently kept the second recipient column, replacing the first. Normalized duplicate headers were also ambiguous. | Medium; **fixed locally** under the same explicit approval. | Reject duplicate normalized column headers before constructing rows. Unit and browser tests cover overwrite prevention and unchanged existing entries on rejection. |
 | F03 | Disconnected user enters a valid invoice and clicks Review: message asks for a wallet but the intended wallet picker never opens because the operation is still busy. | Low; **fixed locally**. | Release the nonfinancial busy state before opening the picker. Browser regression checks the dialog, missing-provider guidance and disabled payment actions. |
 | F04 | CSV import was a label around a hidden input, so keyboard Tab skipped the import action. | Low; **fixed locally**. | Use a native button to open the existing file input; disable it while busy. Browser regression checks reverse Tab from Add recipient, Enter opening the chooser and successful CSV import. No CSS redesign or overrides added. |
-| F05 | With an immediate synthetic network switch, `connect()` reports wrong network even though raw `eth_chainId` already returns V3. A subsequent connection succeeds. | Medium; **open, fails closed**. Real-extension impact remains unverified. | Reproduced against the actual `chain.js` function. Proposed fix and required tests are below. No wallet/network implementation change made in this pass. |
+| F05 | With an immediate synthetic network switch, `connect()` reports wrong network even though raw `eth_chainId` already returns V3. A subsequent connection succeeds. | Medium; **fixed locally in Phase 3B**. Real-extension acceptance remains pending. | Confirmed ethers prior-network return behavior; revision-guarded raw identity reads and a chain-bound transaction boundary replace the old check. See the Phase 3B results below. |
 
-The source changes leave token approval, settlement, receipt verification, wallet discovery/session helpers, token configuration and Solidity contracts unchanged. Changes in `main.js` are limited to picker display and CSV button wiring/busy state.
+Phase 3 changed only CSV validation, picker display and CSV button wiring/busy state. Phase 3B also changes wallet identity/session validation and the final wallet request guard. Contract methods, recipient/amount encoding, settlement evidence verification, token configuration and Solidity contracts remain unchanged.
 
-### F05 proposed wallet-flow fix, not implemented
+### F05 initial Phase 3 observation, superseded by the Phase 3B fix
 
 Reproduction with a fresh synthetic provider:
 
@@ -45,11 +45,9 @@ Reproduction with a fresh synthetic provider:
 3. The next raw `eth_chainId` returns V3, but `connect()` throws `Wallet is on the wrong network. Switch to Portaldot V3.`
 4. Connecting again with the provider already on V3 works.
 
-Provider network caching is a possible explanation; this audit did not establish the internal cause. Payment remains disabled on the rejected connection, so this reproduction does not authorize a wrong-network transaction.
+The initial audit suspected network caching but did not establish the internal cause. Phase 3B confirmed the exact ethers 6.17.0 behavior and implemented the focused fix described in the final section of this report. The sequence above is the historical reproduction, not current network-switching behavior.
 
-Proposed change: validate a fresh raw chain response after switch/add-network, then establish or refresh the browser-provider/signer view against that chain before accepting the session. Preserve account/network rechecks immediately before financial requests. Review this wallet-flow change separately before implementing it.
-
-Affected tests must cover immediate and delayed switch success, user rejection, unknown-chain/add-network behavior, a provider that remains on the wrong chain, account changes during connection, and stale authorization invalidation. Reproduce with real supported extensions before closing F05. Current workaround for the demo is to select V3 in the wallet first and reconnect.
+Setlora no longer requests `wallet_switchEthereumChain` or `wallet_addEthereumChain`: users select V3 in their wallet and explicitly connect/review. Returning to V3 refreshes read-only feedback without reviving an old review or requesting payment.
 
 ## Acceptance coverage
 
@@ -83,7 +81,7 @@ Affected tests must cover immediate and delayed switch success, user rejection, 
 | Switch wallet | PASS with mocks | EIP-6963 announcements for Mock MetaMask and Mock Rabby produced two choices; choosing Rabby used its own provider/account and left settlement disabled until review. |
 | Refresh/reconnect | PASS with mocks | Authorized remembered wallet restores silently; unit tests reject stale account, chain, metadata or permissions. |
 | Permission rejection | PASS with mocks | Connection rejection reports the provider error, leaves no usable session and does not enable settlement. |
-| Wrong-network connection | **FAIL / F05 open** | Immediate switch can falsely fail despite the provider being on V3; second connection succeeds. Rejection/wrong-chain handling remains fail-closed. Real extension switch/add-network timing is untested. |
+| Wrong-network connection | **PASS with Phase 3B mocks** | Raw revision-guarded reads accept V3 immediately and retain genuine wrong-network errors. Switching is manual. Real extension acceptance remains untested. |
 | Account/network changes during review | PASS with mocks | Normal and delayed-review event paths clear session/review and payment controls. |
 | Missing provider | PASS | Picker explains that no EVM wallet was detected. F03 restores the intended path from disconnected review. |
 | Separate approval and settlement | PASS at mock boundary | Synthetic approval updates allowance, creates no paid record and requires a separate settlement action. Actual wallet confirmation screens were intentionally not opened. |
@@ -161,7 +159,7 @@ Read-only RPC recheck at **2026-11-04 09:34:14 UTC**:
 
 The transaction object was available during this recheck. The live public verifier and local recovery separately confirmed the batch. These are fresh reads of an existing transaction, not a newly executed settlement.
 
-## Quality gates and reproducibility
+## Phase 3 quality gates and reproducibility (historical baseline)
 
 | Command / check | Result |
 | --- | --- |
@@ -205,7 +203,7 @@ Warnings reviewed:
 
 Command logs were saved during this session under `/tmp/setlora-final-acceptance-d76og41i/`; raw public-chain read evidence is `/tmp/setlora-acceptance-chain.json`. Playwright generated local `.playwright-mcp/` artifacts. These session artifacts remain untracked and are not portable repository evidence; committed scripts and the observations above provide the reproducible record.
 
-Exploratory failures were retained in the assessment: F01–F04 failed before fixes; F05 still fails the immediate-switch mock. An early safety-script timeout was corrected by using a full document navigation between fixtures. A viewport harness initially treated a hash transition's null navigation response as HTTP failure; that harness was corrected and all viewport cases rerun. A native-check attempt against the dev server encountered a dynamic-import failure during dependency reinstall; the native outage case was rerun against production with WebSocket interception and produced the expected timeout. No application build/test failure was hidden by these harness corrections.
+Exploratory failures were retained in the assessment: F01–F04 failed before fixes; F05 failed the immediate-switch mock in Phase 3 and is fixed by the subsequent Phase 3B changes. An early safety-script timeout was corrected by using a full document navigation between fixtures. A viewport harness initially treated a hash transition's null navigation response as HTTP failure; that harness was corrected and all viewport cases rerun. A native-check attempt against the dev server encountered a dynamic-import failure during dependency reinstall; the native outage case was rerun against production with WebSocket interception and produced the expected timeout. No application build/test failure was hidden by these harness corrections.
 
 ## Untested or blocked scenarios and remaining risks
 
@@ -217,4 +215,86 @@ Exploratory failures were retained in the assessment: F01–F04 failed before fi
 - Fixed-token behavior assumes bool-returning full-amount transfers and correct EVM/runtime rollback. Fee-on-transfer/rebasing/dishonest tokens, malformed token returns and all runtime deposit/funding edge cases are outside current proof.
 - Replay protection is payer-and-contract scoped. It cannot authenticate an issuer, prevent the same commercial obligation being paid under another number/wallet, or protect compromised keys/frontends.
 - Payment data is public and correlatable. There is no mainnet support, native SS58 payout, sponsored onboarding, cross-chain settlement or independent security audit.
-- Keep F05 open and repeat wallet acceptance plus the fixed CSV/picker/keyboard paths on the eventual live release. Publishing and any subsequent blockchain transactions require separate authorization.
+- F05 is closed locally by Phase 3B; repeat real wallet acceptance and the fixed network/CSV/picker/keyboard paths on the eventual live release. Publishing and any subsequent blockchain transactions require separate authorization.
+
+## Phase 3B — wallet network race fix
+
+**Current result: F05 fixed locally; CONDITIONAL GO for the testnet demonstration.** No reproduced network/readiness blocker remains in the deterministic scenarios below. Real browser-extension smoke tests and a separately authorized publication followed by live regression checks remain release conditions. This phase did not push, deploy, sign, approve tokens or create any blockchain transaction. The earlier deployment/settlement observations remain historical reads from Phase 3; they were not replaced with synthetic evidence.
+
+### Confirmed root cause
+
+Before editing, a minimal reproduction against the installed **ethers 6.17.0** produced:
+
+```text
+Raw eth_chainId replies:             1 -> 420420777 -> 420420777
+BrowserProvider('any').getNetwork(): 1 -> 1         -> 420420777
+```
+
+In ethers' `AbstractProvider.getNetwork()`, the changing `any`-network call detects the actual chain and updates its internal network promise, but returns the old `expected.clone()` for that call. Setlora's old `connect()` treated that return as a fresh identity check immediately after switching. This explains the false wrong-network error; an arbitrary cache delay was not the established cause, and adding sleeps or an extra `getNetwork()` call would not address asynchronous state races.
+
+Two application-level gaps increased the risk of stale state: initial account/chain events were ignored while connecting, and payment review could use prior session readiness without fresh wallet identity checks. Existing `sessionVersion` checks protected many delayed balance responses; listener duplication was not the original cause. Regressions now explicitly cover single observer registration and cleanup.
+
+### Implemented fix
+
+- [wallet-network.js](../web/src/wallet-network.js) maintains one observer per selected injected provider. Account, chain and disconnect events invalidate the event revision and reject pending identity checks. Each raw read has a monotonically increasing request sequence; a superseded response cannot win over a newer check.
+- Identity comes from fresh `eth_accounts` and `eth_chainId` responses, not ethers' prior-network return value or the event payload alone. Malformed/unavailable identity is unverified, not ready. Only connection/restore can retry a bounded burst of events; a financial authorization never retries automatically after a change.
+- Verified ethers providers are bound to V3 and the specific authorized account. Signer construction uses the already-verified address and cannot implicitly request another account-access permission prompt.
+- Before a wallet `eth_sendTransaction` handoff, the wrapper checks the original session revision, re-reads account/chain, verifies the sender and chain, and includes the expected chain ID in the request. Unit tests hand only synthetic requests to a deterministic mock. No actual signing or send method reached a real provider.
+- Review checks identity before public RPC work and again before committing ready results. Approval and settlement retain fresh prechecks; the final handoff guard also covers a change during intermediate asynchronous work. Failed fresh checks invalidate local readiness even if a provider omitted an event.
+- Events immediately clear review, balances and allowance readiness. Read-only feedback remains attached to the selected provider, so returning to V3 is recognized. It never revives an old review: reconnect and review are explicit. Latest-response checks also prevent older feedback/errors from replacing the latest network message.
+- Connection no longer requests network switching or network addition. Users select Portaldot V3 in their wallet themselves. Returning to V3, reconnecting and refreshing do not request approval or payment.
+- Pending transaction recovery keys/records are untouched by network/account invalidation or disconnect. Wallet metadata can be forgotten; settlement recovery evidence is retained. Token configuration, deployment addresses, Solidity and payment amounts/recipients are unchanged. No CSS was added or modified.
+
+### Deterministic regression coverage
+
+[wallet-network.test.js](../web/test/wallet-network.test.js) adds **15 tests** using controlled promises, not timing sleeps:
+
+| Required scenario | Result and evidence |
+| --- | --- |
+| Rapid V3/other/V3 switching | PASS; old revision is rejected and only the latest chain is usable. The original ethers return behavior also has a minimal reproduction test. |
+| Multiple events close together | PASS; the prior session revision is invalidated, with exactly one registered observer per event. |
+| Old RPC responses arriving last | PASS in both directions: stale success cannot override a newer wrong-network result; stale wrong-network cannot override a newer V3 result. |
+| Account change during verification | PASS; old signer acquisition is rejected; bounded connection verification selects the new current account. |
+| Disconnect during a pending check | PASS; rejection occurs before the delayed old response arrives; late completion cannot resurrect a session. |
+| Refresh after changing networks | PASS; prior authorization is not silently restored on another chain. Restore uses read-only methods. |
+| Return to V3 | PASS; a new verified session succeeds while the old reviewed signer remains invalid. |
+| Unresolved chain identity | PASS; both approval and settlement transaction request shapes remain blocked at the synthetic handoff boundary. |
+| Genuine wrong network | PASS; wrong chain, invalid chain data and missing account are rejected instead of being treated as ready. |
+| Handoff/account safety and listener cleanup | PASS; synthetic requests are chain-bound, even eventless account changes are checked, and detach/reattach does not duplicate listeners. |
+
+[acceptance-network.browser.js](../web/scripts/acceptance-network.browser.js) uses the actual application, `chain.js`, wallet session and network observer against synthetic EIP-1193 and read-only HTTP fixtures. **24 assertions passed**, including immediate invalidation, older replies arriving last, eventless chain-change detection before settlement, wrong-network connection, account changes, pending disconnect, recovery-record preservation, refresh, return/reconnect, absence of automatic switching/signing/sending, and the viewport checks below.
+
+The existing [UI browser regression](../web/scripts/acceptance-ui.browser.js) passed **7 assertions** and the [transaction safety browser script](../web/scripts/acceptance-safety.browser.js) passed **21 assertions**. The latter's fixture now supplies the new read-only restore export; its synthetic financial boundary remains isolated. Total browser assertions in this phase: **52 passed**. These MCP scripts are run explicitly and are not part of `npm test` or automatic CI; the new 15 Node tests are included in the existing frontend CI suite.
+
+### Browser layout checks
+
+At **390px**, **768px** and **1440px**, the new browser script checked a populated review, network error message and connection controls. Document width equalled viewport width; review actions stayed within the viewport and messages wrapped without horizontal page overflow. Error-state screenshots were saved with unique names under the existing untracked `.playwright-mcp/` directory; representative mobile/desktop screenshots were visually inspected. Existing styling was preserved. These checks do not replace real-device, screen-reader or full accessibility certification.
+
+### Full Phase 3B quality gates
+
+| Check | Result |
+| --- | --- |
+| Frontend `npm ci` | PASS; zero reported vulnerabilities |
+| Frontend `npm test` on Node 22.23.4 | **94 passed, 0 failed**: 79 prior tests plus 15 new network tests |
+| Frontend production build | PASS |
+| Documentation `npm ci` | PASS; zero reported vulnerabilities |
+| Documentation `npm run check:content` | PASS; 9 pages / 5 internal links |
+| Documentation standalone build | PASS |
+| Combined `npm run build:site` | PASS |
+| Required combined HTML outputs | PASS; all nine application/documentation paths listed in the baseline section exist and are nonempty |
+| Foundry `forge test -vv` | **9 passed, 0 failed** |
+| Foundry `forge build` | PASS with the previously recorded lint warnings |
+| Browser regressions | **52 assertions passed**: 24 network, 21 safety, 7 UI |
+| Diff and syntax checks | PASS |
+
+Dependency deprecations, Rollup annotation/bundle-size advisories, Astro optional-content/404 warnings and Foundry security lint warnings remain as described in the baseline. They did not fail a gate and were not suppressed. No independent security audit is claimed.
+
+Full command logs are local session evidence in `/tmp/setlora-phase3b-2ebum87v/`; browser screenshots remain untracked. During test development, an initial microtask-polling fixture prevented a provider request from starting; it was stopped and replaced with an explicit request-start promise. One existing UI file-chooser automation attempt timed out, then passed unchanged on two subsequent runs. The successful results above are from the corrected deterministic tests and completed browser runs, not an assumption based on compilation.
+
+### Remaining release conditions and limits
+
+- Actual MetaMask/Rabby/other EVM extension confirmation and permission screens, mobile wallets and hardware wallets remain untested here. The fix uses standard account/chain reads and event registration/removal, but mocks cannot certify all providers.
+- A continuously changing wallet exhausts bounded connection retries and requires a new explicit connection after it stabilizes. A provider that never responds stays unverified; no financial action is authorized. No automatic network switch, approval or transaction is used as recovery.
+- The wallet remains responsible for enforcing the requested account/chain and confirmation after handoff. An app cannot cancel a request already accepted by a wallet; the existing unknown/pending transaction recovery behavior remains essential.
+- This phase validates local source and production builds. It does not establish that the unpublished fix is present on the live site. Publish only with separate authorization and repeat the network, CSV, picker and keyboard smoke tests there.
+- Existing testnet-only, no-audit, browser-local-history, token/runtime and privacy limitations remain. No mainnet release recommendation is made.

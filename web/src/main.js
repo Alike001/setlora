@@ -3,13 +3,14 @@ import { ethers } from 'ethers';
 import { TOKEN, RPC, CONTRACT_ADDRESS, CHAIN_ID } from './config.js';
 import { validateInvoices, MAX_INVOICES, parseUnitsExact } from './invoice.js';
 import { parseCsv } from './csv.js';
-import { connect, assertActiveWallet, batchRead, readWallet, checkAlreadySettled, approveExactAmount, sendBatch, verifySettlement, recoverHistoricalSettlement, preflightRecipients, preflightWholeBatch } from './chain.js';
+import { connect, restoreWallet, assertActiveWallet, batchRead, readWallet, checkAlreadySettled, approveExactAmount, sendBatch, verifySettlement, recoverHistoricalSettlement, preflightRecipients, preflightWholeBatch } from './chain.js';
 import { isUnresolved, makeVerifiedReceipt, isWalletRejection, attachRecoveredHash } from './status.js';
 import { recoveryActionState } from './recovery.js';
 import { draftStorageKey, loadDraft, saveDraft, hasDraftContent, EMPTY_ROW } from './draft.js';
 import { startWalletDiscovery, requestWalletDiscovery, walletChoices } from './wallets.js';
 import { rememberWallet, forgetWallet, rememberedWallet, findWalletChoice, isWalletStillAuthorized, requestAccountReselection } from './wallet-session.js';
 import { readHistory, addVerifiedHistory, totalHistoryAmount } from './history.js';
+import { walletState, releaseWalletState } from './wallet-network.js';
 
 const $ = id => document.getElementById(id);
 let rows = [{ ...EMPTY_ROW }];
@@ -22,7 +23,9 @@ let last = null;
 let sessionVersion = 0;
 let sessionReady = false;
 let connecting = false;
+let connectionVersion = null;
 let connectedProvider = null;
+let stopWalletObservation = null;
 let connectedChoice = null; // Exact wallet provider selected by the user.
 const STORAGE_KEY = 'setlora:pending:v2';
 const PREVIOUS_STORAGE_KEY = 'setlora:pending:v1';
@@ -83,12 +86,12 @@ function activeSession(snapshot, version) {
 function assertSession(snapshot, version) {
   if (!activeSession(snapshot, version)) throw new Error('Wallet changed during this operation. Reconnect and review again.');
 }
-function resetWalletState(message = 'Wallet disconnected. Connect to review account balances or make payments.', level = 'muted', clearForm = false) {
+function resetWalletState(message = 'Wallet disconnected. Connect to review account balances or make payments.', level = 'muted', clearForm = false, keepProvider = false) {
   // Invalidate the local wallet session before any wallet request completes.
   // Never erase the persisted settlement evidence or clear an unknown broadcast.
   ++sessionVersion;
   forgetWallet(localStorage);
-  unlistenWallet();
+  if (!keepProvider) unlistenWallet();
   session = null; sessionReady = false; review = null; connectedChoice = null;
   historicalVerified = null;
   tokenBalance = 0n; allowance = 0n;
@@ -454,6 +457,18 @@ function updateTxBox() {
     }
   }
 }
+async function assertPaymentWallet(snapshot, version) {
+  try {
+    await assertActiveWallet(snapshot.wallet, snapshot.address, snapshot.provider);
+    assertSession(snapshot, version);
+  } catch (error) {
+    if (activeSession(snapshot, version)) {
+      resetWalletState(error?.message || 'Wallet network is unverified. Reconnect before paying.', 'warn', true, true);
+      $('connect').textContent = 'Reconnect wallet';
+    }
+    throw error;
+  }
+}
 async function loadBalances(snapshot = session, version = sessionVersion) {
   if (!snapshot) throw new Error('No wallet connected.');
   const data = await readWallet(snapshot.address);
@@ -469,38 +484,48 @@ async function loadBalances(snapshot = session, version = sessionVersion) {
 
 // Listen ONLY to the chosen wallet; another installed wallet must not
 // invalidate Setlora's current account when its own account changes.
-function onAccountsChanged(accounts) {
-  if (connecting && !session && accounts?.length) return;
-  resetWalletState('Wallet account changed. Reconnect before paying.', 'warn', true);
+function onWalletIdentityChanged() {
+  // The observer has already invalidated in-flight raw reads. During the
+  // permission prompt, connection will read the new identity after it resolves.
+  if (connecting && !session && sessionVersion === connectionVersion) {
+    sessionReady = false; review = null;
+    renderReviewItems(null); renderRecipientChecks(null); buttons();
+    setMessage($('network-status'), 'Wallet changed. Checking the latest account and network…', 'warn');
+    return;
+  }
+  const provider = connectedProvider;
+  resetWalletState('Wallet changed. Checking the latest account and network. Payment is disabled.', 'warn', true, true);
   $('connect').textContent = 'Reconnect wallet';
-}
-function onChainChanged() {
-  if (connecting && !session) return;
-  resetWalletState('Wallet network changed. Reconnect before paying.', 'warn', true);
-  $('connect').textContent = 'Reconnect wallet';
+  const version = sessionVersion;
+  // Read-only feedback only: returning to V3 never restores an old review,
+  // requests permission, switches a chain, or sends a transaction.
+  void walletState(provider).read().then(identity => {
+    if (sessionVersion !== version || connectedProvider !== provider) return;
+    setMessage($('network-status'), identity.chainId === CHAIN_ID
+      ? 'Portaldot V3 detected. Reconnect your wallet and review before paying.'
+      : 'Wallet is on the wrong network. Select Portaldot V3 Testnet in your wallet, then reconnect.', 'warn');
+  }).catch(error => {
+    if (sessionVersion === version && connectedProvider === provider && error.code !== 'WALLET_STATE_CHANGED') {
+      setMessage($('network-status'), 'Wallet network is unverified. Reconnect before paying.', 'warn');
+    }
+  });
 }
 function onProviderDisconnect() {
   resetWalletState('Wallet disconnected. Reconnect before paying.', 'warn', true);
   $('connect').textContent = 'Reconnect wallet';
 }
 function unlistenWallet() {
-  if (!connectedProvider) return;
-  const remove = connectedProvider.removeListener || connectedProvider.off;
-  if (typeof remove === 'function') {
-    remove.call(connectedProvider, 'accountsChanged', onAccountsChanged);
-    remove.call(connectedProvider, 'chainChanged', onChainChanged);
-    remove.call(connectedProvider, 'disconnect', onProviderDisconnect);
-  }
+  stopWalletObservation?.(); stopWalletObservation = null;
+  if (connectedProvider) releaseWalletState(connectedProvider);
   connectedProvider = null;
 }
 function listenWallet(provider) {
   unlistenWallet();
   connectedProvider = provider;
-  if (typeof provider.on === 'function') {
-    provider.on('accountsChanged', onAccountsChanged);
-    provider.on('chainChanged', onChainChanged);
-    provider.on('disconnect', onProviderDisconnect);
-  }
+  stopWalletObservation = walletState(provider).subscribe(event => {
+    if (event === 'disconnect') onProviderDisconnect();
+    else onWalletIdentityChanged();
+  });
 }
 function renderWalletChoices() {
   const list = $('wallet-choices');
@@ -541,6 +566,7 @@ async function connectClick(choice, { selectAccount = false, previousAddress = n
   $('connect').textContent = 'Connecting…';
   const version = sessionVersion;
   connecting = true;
+  connectionVersion = version;
   setBusy(true);
   try {
     listenWallet(choice.provider);
@@ -609,6 +635,7 @@ function changeWalletClick() {
 }
 async function reviewClick() {
   renderRecipientChecks(null);
+  review = null; renderReviewItems(null);
   setBusy(true);
   try {
     const batch = validateInvoices(rows, ethers.isAddress);
@@ -631,6 +658,9 @@ async function reviewClick() {
     if (isUnresolved(last)) throw new Error('The last settlement is unresolved or mismatched. Recheck its transaction evidence before making another payment.');
     if (!batchRead) { review = null; renderReviewItems(batch); setMessage($('review-status'), 'Invoice values are valid, but the Setlora contract is not deployed/configured. PREVIEW ONLY — no settlement possible.', 'warn'); return; }
     const snapshot = session, version = sessionVersion;
+    setMessage($('review-status'), 'Checking the current wallet account and network…');
+    await assertPaymentWallet(snapshot, version);
+    assertSession(snapshot, version);
     const data = await loadBalances(snapshot, version);
     assertSession(snapshot, version);
     if (!data.configured) throw new Error('Contract is not configured.');
@@ -648,6 +678,8 @@ async function reviewClick() {
       window.location.hash = '#review';
       return;
     }
+    await assertPaymentWallet(snapshot, version);
+    assertSession(snapshot, version);
     review = batch;
     renderReviewItems(batch);
     if (tokenBalance < batch.total) {
@@ -683,7 +715,7 @@ async function approveClick() {
   const snapshot = session, version = sessionVersion, batch = review;
   setBusy(true);
   try {
-    await assertActiveWallet(snapshot.wallet, snapshot.address, snapshot.provider);
+    await assertPaymentWallet(snapshot, version);
     assertSession(snapshot, version);
     if (await checkAlreadySettled(snapshot.address, batch.items).then(x => x.length)) throw new Error('One or more invoices are already settled; review again.');
     assertSession(snapshot, version);
@@ -691,7 +723,7 @@ async function approveClick() {
     assertSession(snapshot, version);
     renderRecipientChecks(readiness);
     if (!readiness.ready) throw new Error('A recipient is not ready to receive pUSD. Resolve the issue and review the batch again. No approval submitted.');
-    await assertActiveWallet(snapshot.wallet, snapshot.address, snapshot.provider);
+    await assertPaymentWallet(snapshot, version);
     assertSession(snapshot, version);
     const tx = await approveExactAmount(snapshot.wallet, batch.total, snapshot.address, snapshot.provider);
     if (activeSession(snapshot, version)) setMessage($('review-status'), `Approval submitted: ${tx.hash}. Check wallet activity before any retry.`, 'warn');
@@ -713,7 +745,7 @@ async function settleClick() {
   let openedWallet = false;
   const previousRecord = last;
   try {
-    await assertActiveWallet(snapshot.wallet, snapshot.address, snapshot.provider);
+    await assertPaymentWallet(snapshot, version);
     assertSession(snapshot, version);
     await loadBalances(snapshot, version);
     assertSession(snapshot, version);
@@ -729,7 +761,7 @@ async function settleClick() {
     if (!readiness.ready) throw new Error('A recipient is no longer ready. Review the affected recipient before settlement.');
     await preflightWholeBatch(snapshot.address, batch.items);
     assertSession(snapshot, version);
-    await assertActiveWallet(snapshot.wallet, snapshot.address, snapshot.provider);
+    await assertPaymentWallet(snapshot, version);
     assertSession(snapshot, version);
 
     // Persist BEFORE asking MetaMask to sign. A reload or provider failure must
@@ -794,10 +826,12 @@ async function tryRestoreWallet() {
   attemptingRestore = true;
   connecting = true;
   const version = sessionVersion;
+  connectionVersion = version;
   $('connect').textContent = 'Restoring wallet…';
   setMessage($('network-status'), 'Checking your previously connected wallet…');
   setBusy(true);
   try {
+    listenWallet(choice.provider);
     if (!(await isWalletStillAuthorized(choice.provider, remembered, CHAIN_ID))) {
       // The user changed account, revoked access, or switched network.
       forgetWallet(localStorage);
@@ -805,8 +839,8 @@ async function tryRestoreWallet() {
       return;
     }
     if (sessionVersion !== version) return;
-    const next = { wallet: new ethers.BrowserProvider(choice.provider, 'any'), provider: choice.provider, address: remembered.address };
-    listenWallet(choice.provider);
+    const next = await restoreWallet(choice.provider, remembered.address);
+    if (sessionVersion !== version) return;
     session = next;
     connectedChoice = choice;
     const status = await loadBalances(next, version);

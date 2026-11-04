@@ -1,8 +1,9 @@
 import { ethers } from 'ethers';
-import { RPC, CHAIN_ID, CHAIN_ID_HEX, TOKEN, CONTRACT_ADDRESS, CONTRACT_ABI, ERC20_ABI } from './config.js';
+import { RPC, CHAIN_ID, TOKEN, CONTRACT_ADDRESS, CONTRACT_ABI, ERC20_ABI } from './config.js';
 import { assessSettlementProof, matchesTransactionIntent } from './status.js';
 import { recoverySnapshot, validRecoveryHash } from './recovery.js';
 import { checkRecipientReadiness } from './readiness.js';
+import { walletState, verifiedWallet, verifiedSigner } from './wallet-network.js';
 
 export const read = new ethers.JsonRpcProvider(RPC, Number(CHAIN_ID), { staticNetwork: true });
 export const tokenRead = new ethers.Contract(TOKEN, ERC20_ABI, read);
@@ -10,41 +11,20 @@ export const batchRead = CONTRACT_ADDRESS && ethers.isAddress(CONTRACT_ADDRESS)
   ? new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, read) : null;
 
 export async function connect(injectedProvider) {
-  if (!injectedProvider?.request) throw new Error('Select an installed EVM wallet first.');
-  const wallet = new ethers.BrowserProvider(injectedProvider, 'any');
+  // Observe changes before opening the explicit account-access prompt.
+  const state = walletState(injectedProvider);
   await injectedProvider.request({ method: 'eth_requestAccounts' });
-  let network = await wallet.getNetwork();
-  if (network.chainId !== CHAIN_ID) {
-    try {
-      await injectedProvider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID_HEX }] });
-    } catch (e) {
-      if (e.code !== 4902) throw e;
-      await injectedProvider.request({ method: 'wallet_addEthereumChain', params: [{ chainId: CHAIN_ID_HEX, chainName: 'Portaldot V3 Testnet', rpcUrls: [RPC], nativeCurrency: { name: 'Test POT', symbol: 'tPOTv3', decimals: 18 } }] });
-    }
-    network = await wallet.getNetwork();
-  }
-  if (network.chainId !== CHAIN_ID) throw new Error('Wallet is on the wrong network. Switch to Portaldot V3.');
-  return { wallet, provider: injectedProvider, address: await (await wallet.getSigner()).getAddress() };
+  return verifiedWallet(injectedProvider, CHAIN_ID, null, state);
 }
 
-// Recheck the active EIP-1193 account and chain before each financial request.
-// Events can be delayed; don't rely on UI state alone for signing safety.
+export async function restoreWallet(injectedProvider, expectedAddress) {
+  return verifiedWallet(injectedProvider, CHAIN_ID, expectedAddress);
+}
+
+// Fresh raw identity checks and an event revision guard, independent of ethers'
+// previous-network return value. No permission prompt or network switch here.
 export async function assertActiveWallet(wallet, expectedAddress, injectedProvider) {
-  if (!injectedProvider?.request) throw new Error('Wallet provider is unavailable.');
-  const [accounts, chainHex] = await Promise.all([
-    injectedProvider.request({ method: 'eth_accounts' }),
-    injectedProvider.request({ method: 'eth_chainId' })
-  ]);
-  if (!Array.isArray(accounts) || !accounts.length ||
-      accounts[0].toLowerCase() !== expectedAddress.toLowerCase()) {
-    throw new Error('Active wallet account changed. Reconnect and review before signing.');
-  }
-  if (BigInt(chainHex) !== CHAIN_ID) throw new Error('Wrong wallet network. Connect to Portaldot V3.');
-  const signer = await wallet.getSigner();
-  if ((await signer.getAddress()).toLowerCase() !== expectedAddress.toLowerCase()) {
-    throw new Error('Wallet signer differs from the reviewed payer. Reconnect.');
-  }
-  return signer;
+  return verifiedSigner(wallet, expectedAddress, injectedProvider, CHAIN_ID);
 }
 
 export async function readWallet(address) {

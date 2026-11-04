@@ -1,3 +1,5 @@
+import { walletState } from './wallet-network.js';
+
 // Remember only the wallet selection metadata and public address.
 // No private key, approval, or signature is ever stored.
 export const WALLET_KEY = 'setlora:last-wallet:v1';
@@ -39,12 +41,8 @@ export async function isWalletStillAuthorized(provider, remembered, chainId) {
   if (!provider?.request || !remembered || !isAddress(remembered.address)) return false;
   // IMPORTANT: eth_accounts does not prompt, unlike eth_requestAccounts.
   try {
-    const [accounts, currentChain] = await Promise.all([
-      provider.request({ method: 'eth_accounts' }),
-      provider.request({ method: 'eth_chainId' })
-    ]);
-    return Array.isArray(accounts) && accounts.length > 0 && isAddress(accounts[0]) &&
-      accounts[0].toLowerCase() === remembered.address && BigInt(currentChain) === BigInt(chainId);
+    const identity = await walletState(provider).read();
+    return identity.address.toLowerCase() === remembered.address && identity.chainId === BigInt(chainId);
   } catch { return false; }
 }
 

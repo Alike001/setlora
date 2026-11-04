@@ -30,6 +30,7 @@ async (page) => {
     export const batchRead = {};
     export const read = {};
     export async function connect(provider) { return { wallet: {}, provider, address: (await provider.request({ method: 'eth_requestAccounts' }))[0] }; }
+    export async function restoreWallet(provider, address) { return {wallet:{},provider,address}; }
     export async function assertActiveWallet(wallet, expected, provider) {
       const [current] = await provider.request({ method: 'eth_accounts' });
       if (current !== expected || await provider.request({ method: 'eth_chainId' }) !== '0x190f1ca9') throw new Error('Wallet changed');
