@@ -8,7 +8,7 @@ import { isUnresolved, makeVerifiedReceipt, isWalletRejection, attachRecoveredHa
 import { recoveryActionState } from './recovery.js';
 import { draftStorageKey, loadDraft, saveDraft, hasDraftContent, EMPTY_ROW } from './draft.js';
 import { startWalletDiscovery, requestWalletDiscovery, walletChoices } from './wallets.js';
-import { rememberWallet, forgetWallet, rememberedWallet, findWalletChoice, isWalletStillAuthorized, requestAccountReselection } from './wallet-session.js';
+import { rememberWallet, forgetWallet, rememberedWallet, findWalletChoice, readRememberedWalletIdentity, isWalletStillAuthorized, requestAccountReselection } from './wallet-session.js';
 import { readHistory, addVerifiedHistory, totalHistoryAmount } from './history.js';
 import { walletState, releaseWalletState } from './wallet-network.js';
 import { switchWalletNetwork, explainNetworkSwitchError } from './wallet-network-switch.js';
@@ -867,22 +867,20 @@ async function tryRestoreWallet() {
   setMessage($('network-status'), 'Checking your previously connected wallet…');
   setBusy(true);
   try {
+    // Discovery/remembered metadata is not authorization. Observe identity
+    // without selecting the provider or exposing network actions first.
+    const identity = await readRememberedWalletIdentity(choice.provider, remembered);
+    if (sessionVersion !== version) return;
+    if (!identity) {
+      resetWalletState('Connect a wallet to continue. Previous account access could not be verified.', 'muted');
+      return;
+    }
+    walletState(choice.provider).assertRevision(identity.revision);
     listenWallet(choice);
-    if (!(await isWalletStillAuthorized(choice.provider, remembered, CHAIN_ID))) {
-      // The user changed account, revoked access, or switched network.
-      forgetWallet(localStorage);
-      setMessage($('network-status'), 'Wallet access or network changed. Connect a wallet to continue.', 'muted');
-      try {
-        const identity = await walletState(choice.provider).read();
-        if (sessionVersion !== version || connectedProvider !== choice.provider) return;
-        networkCanSwitch = identity.chainId !== CHAIN_ID;
-        if (networkCanSwitch) setMessage($('network-status'), 'Wallet is on the wrong network. Use Switch to Portaldot V3 or select it manually.', 'warn');
-      } catch (error) {
-        if (sessionVersion === version && connectedProvider === choice.provider && hasWrongWalletNetwork(error)) {
-          networkCanSwitch = true;
-          setMessage($('network-status'), 'Wallet is on the wrong network and account access is missing. Switch to Portaldot V3, then reconnect.', 'warn');
-        }
-      }
+    if (identity.chainId !== CHAIN_ID) {
+      networkCanSwitch = true;
+      $('connect').textContent = 'Reconnect wallet';
+      setMessage($('network-status'), 'Your previously authorized wallet is on the wrong network. Use Switch to Portaldot V3, then reconnect and review.', 'warn');
       return;
     }
     if (sessionVersion !== version) return;
@@ -917,6 +915,7 @@ async function tryRestoreWallet() {
   } catch {
     if (sessionVersion === version) resetWalletState('Could not restore your wallet. Choose Connect wallet to try again.', 'warn');
   } finally {
+    if (connectedProvider !== choice.provider) releaseWalletState(choice.provider);
     connecting = false;
     attemptingRestore = false;
     if (!$('connect').hidden && $('connect').textContent === 'Restoring wallet…') $('connect').textContent = 'Connect wallet';

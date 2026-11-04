@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { WALLET_KEY, forgetWallet, rememberWallet, rememberedWallet, findWalletChoice, isWalletStillAuthorized } from '../src/wallet-session.js';
+import { WALLET_KEY, forgetWallet, rememberWallet, rememberedWallet, findWalletChoice, readRememberedWalletIdentity, isWalletStillAuthorized } from '../src/wallet-session.js';
+import { walletState, releaseWalletState } from '../src/wallet-network.js';
 const A = `0x${'a'.repeat(40)}`, C = `0x${'c'.repeat(40)}`;
 const store = () => { const m = new Map(); return { getItem: k => m.get(k) || null, setItem: (k, v) => m.set(k, v), removeItem: k => m.delete(k) }; };
 const choice = (provider = { request() {} }) => ({ id: 'uuid-per-page', rdns: 'io.metamask', name: 'MetaMask', provider });
@@ -43,4 +44,41 @@ test('does not silently restore when permission, account, or chain has changed',
   assert.equal(await isWalletStillAuthorized(ask([], '0x190f1ca9'),{address:A},420420777n),false);
   assert.equal(await isWalletStillAuthorized(ask([C],`0x${(420420777).toString(16)}`),{address:A},420420777n),false);
   assert.equal(await isWalletStillAuthorized(ask([A],'0x1'),{address:A},420420777n),false);
+});
+
+test('remembered authorization distinguishes matching account on wrong chain from a revoked or different account', async t => {
+  for (const accounts of [[A], [], [C]]) {
+    const calls = [];
+    const provider = {request: async ({method}) => {
+      calls.push(method); return method === 'eth_accounts' ? accounts : '0x1';
+    }};
+    t.after(() => releaseWalletState(provider));
+    const identity = await readRememberedWalletIdentity(provider, {address:A});
+    if (accounts[0] === A) {
+      assert.equal(identity.address.toLowerCase(), A);
+      assert.equal(identity.chainId, 1n);
+      walletState(provider).assertRevision(identity.revision);
+    } else assert.equal(identity, null);
+    assert.deepEqual(calls.sort(), ['eth_accounts', 'eth_chainId']);
+  }
+});
+
+test('missing remembered selection never probes an installed provider', async () => {
+  const provider = {request() { throw new Error('Discovery must not request identity'); }};
+  assert.equal(await readRememberedWalletIdentity(provider, null), null);
+});
+
+test('network events invalidate a pending remembered identity check even if old RPC replies arrive later', async t => {
+  let resolveChain;
+  const events = new Map();
+  const provider = {
+    request: async ({method}) => method === 'eth_accounts' ? [A] : new Promise(resolve => {resolveChain = resolve;}),
+    on: (event, handler) => events.set(event, handler),
+    removeListener: event => events.delete(event),
+  };
+  t.after(() => releaseWalletState(provider));
+  const checking = readRememberedWalletIdentity(provider, {address:A});
+  events.get('chainChanged')('0x1');
+  assert.equal(await checking, null);
+  resolveChain('0x190f1ca9');
 });

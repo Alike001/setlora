@@ -481,3 +481,34 @@ In actual MetaMask and Rabby (where available), record extension/browser version
 5. Remove site account permission through wallet settings, switch if supported, and confirm that missing permission requires an explicit Connect action. Refresh on a wrong chain and verify no automatic switch. Review only after a fresh connection; preserve any genuine pre-existing pending recovery records.
 
 **Recommendation: CONDITIONAL GO for a locally tested testnet feature; full wallet-connected release acceptance remains blocked on actual extension testing.** This feature is not yet published, so publication must be authorized and reverified separately. Automatic network addition is unavailable pending verified complete official metadata; manual setup is the supported fallback. Wallet requests that never resolve require the user to finish/dismiss them in the wallet or reload; the app does not bypass a pending request or automatically retry. Provider honesty, device accessibility, RPC availability and the previously documented security/testnet limitations remain. No push, deployment, private-key access, signature or blockchain transaction occurred in this work.
+
+## Premature network-warning fix — local acceptance
+
+Starting branch/HEAD: `main`, `0489d6d7488830acceda965e5c4ecd7fa6755d1b`. The reported disconnected-header/wrong-network combination was reproduced with a stale remembered selection whose account permission had been revoked. A clean browser with no remembered selection already remained neutral; this investigation did not inspect the user's browser storage or assume its contents.
+
+**Root cause:** restoration attached the selected-provider UI listener before validating authorization. When the combined account/chain authorization check failed, a fallback chain read still exposed the switch action, including when account access was missing or the active account differed from the remembered account. The fallback also retained those UI listeners, allowing later unselected-provider events to update the warning. Provider discovery by itself was not evidence of authorization.
+
+**Fix:** read the remembered wallet's actual account and chain without promoting it to the active selection. Only a current authorized account matching the remembered address, with a still-current identity revision, can establish the selected provider. A matching account on V3 can restore; a matching account on another chain gets explicit **Reconnect wallet** / switch guidance while payments remain disabled. Missing, changed or unverified accounts clear the remembered selection, remove provisional listeners and show neutral **Connect wallet** guidance. The authorized wrong-chain record is retained for accurate guidance after refresh. No wallet permissions or network changes are requested by restoration.
+
+Explicit wallet selection remains unchanged: the selected provider is retained after a genuine wrong-chain connection attempt so the switch button works before a payment session exists. Switching still verifies account/chain, requires explicit reconnect and fresh review, handles rejection without payment readiness, and never authorizes payments. Disconnect removes the active selection and switch control while preserving pending recovery evidence. Existing revision guards, stale-read rejection, selected-wallet isolation, transaction recovery and approval/settlement separation remain intact. No CSS, contracts, deployment or token settings were changed.
+
+### Regression evidence
+
+The new synthetic-browser harness **failed before the fix** at `revoked: neutral disconnected state`, then passed all **28 assertions** after the fix. It covers fresh installed MetaMask with no Setlora selection; no wallet; remembered revoked/different account; authorized remembered accounts on correct/wrong chains; explicit wrong-chain selection among multiple wallets on different networks; unselected-provider events; disconnect/refresh; disabled payments; and preserved pending evidence. Three new unit tests cover remembered account identity versus chain status, no probing without remembered selection, and stale RPC responses after identity events.
+
+| Validation | Result |
+| --- | --- |
+| Frontend `npm test`, Node 22.23.4 | **114 passed, 0 failed** |
+| New selection browser regression | **28 assertions passed** |
+| Existing switch browser regression | **31 assertions passed** — successful switch/reconnect, rejection, account access and recovery |
+| Existing network browser regression | **24 assertions passed** — rapid events, stale responses, isolated provider listeners and responsive review/error states |
+| Existing safety / UI browser regressions | **21 / 7 assertions passed** |
+| Documentation `npm run check:content` | PASS — 9 MDX pages / 5 internal links |
+| Combined `npm run build:site` | PASS — documentation build, frontend production build and combined output |
+| Nonempty required combined HTML outputs | PASS — same nine routes listed in the preceding feature section |
+| Foundry `forge test -vv` / `forge build` | PASS — **9 tests, 0 failures** |
+| Diff whitespace / scope review | PASS |
+
+All **111 browser assertions** were executed against deterministic mocked providers or isolated synthetic payment boundaries. Existing network/switch harnesses also check 390px, 768px and 1440px. No installed-wallet acceptance or live publication verification is claimed. Existing documentation optional-collection/404 notices, dependency annotation/large-bundle warnings, and Foundry lint notices remain visible and nonfatal; no warning suppression or contract patch was introduced.
+
+**Recommendation remains CONDITIONAL GO for the locally tested testnet application. Real-wallet acceptance is still pending until manually verified.** In the actual MetaMask/Rabby browser, check a clean disconnected visit, revoked site access with a remembered record, a changed account, authorized restoration on both networks, explicit switch rejection/success, fresh review, and disconnect/refresh. Only approve account access or a network change; do not approve tokens, sign financial messages or send payments. These local changes require a separately authorized publication and subsequent production verification. No push, deployment, signature or blockchain transaction occurred during this fix. All unrelated untracked files, wallet backups and deployment evidence were preserved.

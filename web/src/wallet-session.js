@@ -37,13 +37,17 @@ export function findWalletChoice(choices, remembered) {
   // Don't silently choose one provider when the match is ambiguous.
   return matches.length === 1 ? matches[0] : null;
 }
-export async function isWalletStillAuthorized(provider, remembered, chainId) {
-  if (!provider?.request || !remembered || !isAddress(remembered.address)) return false;
+export async function readRememberedWalletIdentity(provider, remembered) {
+  if (!provider?.request || !remembered || !isAddress(remembered.address)) return null;
   // IMPORTANT: eth_accounts does not prompt, unlike eth_requestAccounts.
   try {
     const identity = await walletState(provider).read();
-    return identity.address.toLowerCase() === remembered.address && identity.chainId === BigInt(chainId);
-  } catch { return false; }
+    return identity.address.toLowerCase() === remembered.address.toLowerCase() ? identity : null;
+  } catch { return null; }
+}
+export async function isWalletStillAuthorized(provider, remembered, chainId) {
+  const identity = await readRememberedWalletIdentity(provider, remembered);
+  return Boolean(identity && identity.chainId === BigInt(chainId));
 }
 
 // Prompt the selected injected wallet to let the user choose which account this
