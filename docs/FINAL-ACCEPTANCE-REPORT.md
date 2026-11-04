@@ -2,20 +2,20 @@
 
 ## Recommendation
 
-**CONDITIONAL GO for a bounded Portaldot V3 testnet hackathon demonstration.** Week 2 check-in is submitted; this is preparation for the final release, not a new check-in. No mainnet or real-money readiness is claimed.
+**CONDITIONAL GO for a wallet-free Portaldot V3 testnet hackathon walkthrough.** Phase 4 verifies the published application bytes and live settlement evidence. Full real-wallet acceptance remains **BLOCKED** because no usable wallet extension/provider is available in the audit browser. Week 2 check-in is submitted; this is preparation for the final release, not a new check-in. No mainnet or real-money readiness is claimed.
 
-Conditions before calling the final public release accepted:
+Conditions before calling the full wallet-connected final release accepted:
 
-1. Complete a real browser-wallet smoke matrix for the Phase 3B fix. F05 is fixed locally with deterministic unit/browser coverage; extension acceptance remains pending. Current evidence for wallet interaction is synthetic, not a MetaMask/Rabby extension certification.
-2. Publish only through a separately authorized release step, then recheck the Phase 3 and Phase 3B fixes on the live site. Nothing was pushed or deployed during this audit; production is not claimed to contain these fixes.
+1. Complete a real browser-wallet smoke matrix for the Phase 3B fix. F05 code is fixed and its published bundle matches the verified local build; real-extension acceptance remains pending. Current evidence for wallet interaction is synthetic, not a MetaMask/Rabby extension certification.
+2. Keep the real-wallet results distinct from publication evidence. Phase 4 confirms that the published application matches the build from `76eaccc53d2d450df94f969bd5dbb88e2f09e2ea`; any later application change needs a new authorized publication and verification. This audit itself did not push or deploy.
 3. Retain the testnet-only limitations and unknown-transaction recovery guidance. Further security work remains necessary before any mainnet consideration.
 
-No unsafe broadcast or false chain confirmation was observed in the exercised scenarios. That is bounded evidence, not an independent security audit or exhaustive verification. Phase 3B closes the reproduced F05 defect locally. The final public release remains conditional on real wallet-extension acceptance, an authorized publication and the explicitly untested scenarios below.
+No unsafe broadcast or false chain confirmation was observed in the exercised scenarios. That is bounded evidence, not an independent security audit or exhaustive verification. Phase 3B closes the reproduced F05 defect in code, and Phase 4 verifies its published bytes. The full wallet-connected release remains conditional on real wallet-extension acceptance and the explicitly untested scenarios below; a passing mock is not a real-extension result.
 
 ## Scope and evidence boundaries
 
 - Audit date: **November 4, 2026**.
-- Phase 3 starting branch/HEAD: `main`, `547c59cb5130cabb5d6705d7ca818b9580ac6a30`; Phase 3B starts from acceptance commit `dae19a5c43c15bbc33a9f72361db5013cea6bfe2`.
+- Phase 3 starting branch/HEAD: `main`, `547c59cb5130cabb5d6705d7ca818b9580ac6a30`; Phase 3B starts from acceptance commit `dae19a5c43c15bbc33a9f72361db5013cea6bfe2`; Phase 4 audits `76eaccc53d2d450df94f969bd5dbb88e2f09e2ea`.
 - Acceptance criteria: the Phase 3 request; implementation references: [current status](STATUS.md), [settlement specification](SETTLEMENT-SPEC.md), [threat model](THREAT-MODEL.md), application source and existing frontend/Foundry tests.
 - Local validation runtime: **Node.js 22.23.4**, Foundry 1.8.5. Documentation requires a supported Node patch; an earlier Phase 2 run established that Node 22.23.3 is insufficient.
 - Browser evidence: Chromium through Playwright, the configured Vite source app at port 5174, the combined production output at port 4175, and `https://setlora.pages.dev/`.
@@ -32,7 +32,7 @@ Evidence labels used below: **unit** means a local automated helper/contract tes
 | F02 | `invoice,recipient,recipient,amount` silently kept the second recipient column, replacing the first. Normalized duplicate headers were also ambiguous. | Medium; **fixed locally** under the same explicit approval. | Reject duplicate normalized column headers before constructing rows. Unit and browser tests cover overwrite prevention and unchanged existing entries on rejection. |
 | F03 | Disconnected user enters a valid invoice and clicks Review: message asks for a wallet but the intended wallet picker never opens because the operation is still busy. | Low; **fixed locally**. | Release the nonfinancial busy state before opening the picker. Browser regression checks the dialog, missing-provider guidance and disabled payment actions. |
 | F04 | CSV import was a label around a hidden input, so keyboard Tab skipped the import action. | Low; **fixed locally**. | Use a native button to open the existing file input; disable it while busy. Browser regression checks reverse Tab from Add recipient, Enter opening the chooser and successful CSV import. No CSS redesign or overrides added. |
-| F05 | With an immediate synthetic network switch, `connect()` reports wrong network even though raw `eth_chainId` already returns V3. A subsequent connection succeeds. | Medium; **fixed locally in Phase 3B**. Real-extension acceptance remains pending. | Confirmed ethers prior-network return behavior; revision-guarded raw identity reads and a chain-bound transaction boundary replace the old check. See the Phase 3B results below. |
+| F05 | With an immediate synthetic network switch, `connect()` reports wrong network even though raw `eth_chainId` already returns V3. A subsequent connection succeeds. | Medium; **fixed in Phase 3B; published bytes verified in Phase 4**. Real-extension acceptance remains BLOCKED. | Confirmed ethers prior-network return behavior; revision-guarded raw identity reads and a chain-bound transaction boundary replace the old check. See the Phase 3B results below. |
 
 Phase 3 changed only CSV validation, picker display and CSV button wiring/busy state. Phase 3B also changes wallet identity/session validation and the final wallet request guard. Contract methods, recipient/amount encoding, settlement evidence verification, token configuration and Solidity contracts remain unchanged.
 
@@ -215,11 +215,11 @@ Exploratory failures were retained in the assessment: F01–F04 failed before fi
 - Fixed-token behavior assumes bool-returning full-amount transfers and correct EVM/runtime rollback. Fee-on-transfer/rebasing/dishonest tokens, malformed token returns and all runtime deposit/funding edge cases are outside current proof.
 - Replay protection is payer-and-contract scoped. It cannot authenticate an issuer, prevent the same commercial obligation being paid under another number/wallet, or protect compromised keys/frontends.
 - Payment data is public and correlatable. There is no mainnet support, native SS58 payout, sponsored onboarding, cross-chain settlement or independent security audit.
-- F05 is closed locally by Phase 3B; repeat real wallet acceptance and the fixed network/CSV/picker/keyboard paths on the eventual live release. Publishing and any subsequent blockchain transactions require separate authorization.
+- F05 code is fixed by Phase 3B and its published bytes are verified in Phase 4; real wallet acceptance remains blocked. Repeat wallet-dependent network/CSV/picker/keyboard paths with actual extensions on the live site. Publishing and any subsequent blockchain transactions require separate authorization.
 
 ## Phase 3B — wallet network race fix
 
-**Current result: F05 fixed locally; CONDITIONAL GO for the testnet demonstration.** No reproduced network/readiness blocker remains in the deterministic scenarios below. Real browser-extension smoke tests and a separately authorized publication followed by live regression checks remain release conditions. This phase did not push, deploy, sign, approve tokens or create any blockchain transaction. The earlier deployment/settlement observations remain historical reads from Phase 3; they were not replaced with synthetic evidence.
+**Phase 3B result: F05 fixed locally; CONDITIONAL GO for the testnet demonstration.** No reproduced network/readiness blocker remains in the deterministic scenarios below. Real browser-extension smoke tests and a separately authorized publication followed by live regression checks remain release conditions. This phase did not push, deploy, sign, approve tokens or create any blockchain transaction. The earlier deployment/settlement observations remain historical reads from Phase 3; they were not replaced with synthetic evidence.
 
 ### Confirmed root cause
 
@@ -298,3 +298,124 @@ Full command logs are local session evidence in `/tmp/setlora-phase3b-2ebum87v/`
 - The wallet remains responsible for enforcing the requested account/chain and confirmation after handoff. An app cannot cancel a request already accepted by a wallet; the existing unknown/pending transaction recovery behavior remains essential.
 - This phase validates local source and production builds. It does not establish that the unpublished fix is present on the live site. Publish only with separate authorization and repeat the network, CSV, picker and keyboard smoke tests there.
 - Existing testnet-only, no-audit, browser-local-history, token/runtime and privacy limitations remain. No mainnet release recommendation is made.
+
+## Phase 4 — post-publication verification and real-wallet acceptance support
+
+**Final recommendation: CONDITIONAL GO for the wallet-free testnet walkthrough; full real-wallet acceptance is BLOCKED.** Published code, read-only settlement evidence, navigation and bounded browser accessibility checks pass. No confirmed UI defect required a source change. This phase changes only this report and does not authorize or perform a push, deployment, financial signature or transaction.
+
+### Publication verification
+
+Audit snapshot: `main` at **`76eaccc53d2d450df94f969bd5dbb88e2f09e2ea`**, with no pre-existing tracked changes. Existing untracked work, wallet backups, deployment evidence and browser artifacts were preserved.
+
+All requested live URLs returned HTTP 200 with the expected page content in **Chromium 153.0.8010.52**:
+
+| URL | Result |
+| --- | --- |
+| `https://setlora.pages.dev/` | PASS — landing page |
+| `https://setlora.pages.dev/app` | PASS — payment workspace |
+| `https://setlora.pages.dev/proof` | PASS — public verifier |
+| `https://setlora.pages.dev/native` | PASS — native account checker |
+| `https://setlora.pages.dev/docs/` | PASS — documentation index |
+| `https://setlora.pages.dev/docs/how-to-test/` | PASS — judge guide |
+
+A fresh combined build used Node 22.23.4 and the verified public contract address. At **2026-11-04 15:30:48 UTC**, normal same-origin browser fetches retrieved **41 HTML/static files**: six HTML entry points, 23 JavaScript files, 11 stylesheets and the site SVG. **All 41 returned HTTP 200 and matched the local build byte for byte by SHA-256.** This includes the Phase 3B network fix, application configuration, dynamic native checker code and documentation/search assets.
+
+Key published artifacts:
+
+| Artifact | SHA-256 |
+| --- | --- |
+| `assets/app-DeBvlAUr.js` | `fae797e04649bc2f2b25c11c5010e8119cfd8ef43794c2d9b88884c3e94b4f98` |
+| `assets/chain-BDYCKX3J.js` | `6cb159ec92f64d71534e33b8697a6a71f84e6a45d3e4e5c3d4313629cf448ee5` |
+| `assets/config-D4rEZxvL.js` | `1859d2abed1eaf46d5d21f85a889741a443c89c658da099cb3282de9e84b9fde` |
+
+This establishes published application-byte equivalence to the expected build. No hosting deployment API/commit-SHA record was inspected, so the hosting platform's exact recorded deployment commit is not independently asserted. The later report-only commit does not change generated application assets.
+
+Loading/navigation checks found no runtime or console errors, broken images, HTTP asset errors or failed asset requests in the six-page load run. All **16 unique same-origin navigation paths** discovered from those pages returned the expected HTML, including `.html` application links and all nine documentation guides. Documentation search returned the expected verification and wallet guides, exercising its lazy-loaded search resources.
+
+Observations retained rather than hidden:
+
+- An initial command-line `urllib` comparison received HTTP 403 for the same URLs. The normal browser loads and browser fetches returned 200; the successful 41-file digest comparison used those actual browser responses. Non-browser client access is not certified by this audit.
+- One documentation `ui-core` request reported `net::ERR_ABORTED` during rapid page navigation. That asset independently returned 200 with a matching digest; an isolated judge-guide/search rerun completed with zero failed requests or runtime errors. This was not treated as a missing asset.
+- An initial search harness selected `input[type="search"]` and timed out. The actual named Search textbox is `type="text"`; the corrected accessible-role locator produced working search results. This was a test-selector failure, not a production search defect.
+
+### Fresh read-only blockchain evidence
+
+At **2026-11-04 15:28:36 UTC**, direct read-only RPC calls rechecked:
+
+- Network chain ID `420420777`; expected contract `0x2d17199920251f7eec8a555043c8387194ff5d1b` with bytecode present.
+- Immutable token `0x00001E6100000000000000000000000000010000`, six decimals.
+- Existing transaction `0x0ea4730fc73f3842a80f3015ee682ffa2bc0c5312fccf272d9899ee3ec1e3c16`: successful receipt to the expected contract at block **262291**, with a matching canonical block hash. The transaction object was also available and identified V3.
+- Exactly three `InvoiceSettled` events from the expected contract: invoice 1001 / 100,000 base units, 1002 / 150,000, and 1003 / 200,000; recipients and payer matched the evidence table above.
+- Exactly one matching `BatchSettled` event: count **3**, total **450,000 base units = 0.45 test pUSD**.
+- `isSettled(payer, 1001)`, `1002` and `1003` all **true**.
+
+The live wallet-free verifier separately displayed **Verified**, the expected payer/contract, all three invoices and **0.45 pUSD**. Its observed RPC methods were only `eth_chainId`, `eth_getCode`, `eth_call`, `eth_getTransactionReceipt`, `eth_getTransactionByHash` and `eth_getBlockByNumber`.
+
+Both settlement checks used the configured Portaldot V3 RPC; this is not independent-node or consensus verification.
+
+The live native checker also completed a read for the invoice 1001 preset: existing liquid pUSD holder, 0.1 pUSD, minimum 0.01 pUSD, providers 1 / sufficients 0. It correctly states that this is not a guarantee of future transfer success. It remains a read-only checker, not native-address settlement.
+
+### Accessibility and responsive browser results
+
+At **390px, 768px and 1440px**, eight rendered surfaces were checked: landing page, preparation, review, history, public verifier, native checker, docs index and judge guide. **All 24 surface/viewport combinations** had document scroll width equal to viewport width, no broken images and accessible names for the visible form controls inspected. Review/history checks in this phase covered their disconnected states; actual wallet-connected populated states remain blocked.
+
+Additional live keyboard/form checks passed:
+
+- Landing mobile Menu opens with Enter; its Documentation link navigates by keyboard. Documentation Menu and judge-guide links also work by keyboard.
+- Invoice, recipient, amount and note fields have accessible names and visible focus outlines at all three widths. CSV import participates in focus navigation; Escape closes the no-wallet picker.
+- Empty invoice validation places focus on the identified invoice field, sets `aria-invalid="true"`, and presents visible feedback with `role="status"` / `aria-live="polite"`.
+- Invalid public-proof hash and native address produce readable errors in polite status regions and hide results; they never show a false confirmation.
+- Valid disconnected Review opens the wallet picker, explains that no wallet is detected, and leaves approval and settlement disabled.
+- The documentation code-copy controls have the accessible name **Copy to clipboard** through their `title` attributes. A preliminary text/ARIA-only DOM scan omitted that fallback and flagged two controls; the actual accessibility tree confirmed both names, so no label patch was warranted.
+
+Unique error-state screenshots for mobile/tablet/desktop were captured and visually inspected. Existing application CSS, forms and payment logic were unchanged. These are viewport emulation and DOM/accessibility-tree checks, not physical-device, full contrast/WCAG or screen-reader auditory certification. Live-region attributes were inspected; actual spoken announcements were not tested.
+
+### Real-wallet acceptance — BLOCKED
+
+The audit browser exposes **no `window.ethereum.request`**, no EIP-6963 provider announcements after discovery, and no active extension service workers. Setlora's actual picker reports **No EVM wallet detected**. This establishes that no usable wallet provider is available in this browser; it does not assert that the user's separate desktop browser has no installed wallets.
+
+| Actual extension acceptance case | Result |
+| --- | --- |
+| Connect/account-access permission | **BLOCKED — no available extension/provider** |
+| Disconnect and permission revocation | **BLOCKED — no available extension/provider** |
+| MetaMask/Rabby account selection | **BLOCKED — no available extension/provider** |
+| Manual wallet network switching | **BLOCKED — no available extension/provider** |
+| Rapid chain-change recovery | **BLOCKED — no available extension/provider** |
+| Wallet-dependent review invalidation and reconnect | **BLOCKED — no available extension/provider** |
+| Authorized wallet restoration on refresh | **BLOCKED — no available extension/provider** |
+
+No synthetic provider was installed or used as evidence of a real-extension test in this phase. Phase 3B's 52 mocked browser assertions remain separately labelled historical evidence, not a replacement for the blocked matrix.
+
+### Concise manual real-wallet checklist
+
+Run separately in the user's actual MetaMask and Rabby browsers/extensions where available. Record browser/OS, extension name/version, viewport, expected/actual behavior, PASS/FAIL/BLOCKED and public screenshots. Do not provide private keys, seed phrases or backup files to the agent. **Do not click token approval or settlement, request financial signatures, or send any transaction.**
+
+1. Open [the live workspace](https://setlora.pages.dev/app). Manually select **Portaldot V3 Testnet, chain ID 420420777** in the wallet. Click Connect and authorize only site/account access. Confirm the displayed public account and expected contract; inspect balance/allowance without changing them.
+2. Choose a fresh invoice ID (not a previously paid ID), the recorded invoice 1001 EVM recipient, and a small test amount such as 0.01 pUSD. Click **Review only**. If balance or recipient simulation blocks review, record the message and mark the ready-review-dependent case BLOCKED; do not fund/approve/pay merely to complete this checklist.
+3. Use **Switch account** to choose another already-authorized account. The old review must clear, payment actions must disable, and reconnect/review must use the newly selected account. Repeat Change wallet with another installed supported extension if available; the chosen provider must be used.
+4. From a reviewed batch, manually switch to another already-configured EVM network. Review/readiness must invalidate immediately; approval and settlement must remain disabled. The app should show checking/unverified and then the genuine wrong-network message. It must not automatically switch the wallet or open a financial confirmation.
+5. Switch between that network and V3 several times, then leave V3 selected. Old responses must not restore an outdated error or ready review. Expect **V3 detected; reconnect and review**. Reconnect explicitly, then Review only; the current account/network must be used.
+6. Refresh while on the wrong network: old wallet readiness must not silently restore. Return to V3 manually and reconnect. If genuine pending recovery information already exists, verify that it remains available for its payer; do not edit browser storage, invent a payment, or resend anything to test recovery.
+7. Disconnect through the app. Local readiness/review must clear. If revocation is supported, check site access in the wallet; otherwise the app must honestly direct removal through wallet settings. Repeat at mobile/tablet/desktop widths available to the tester and capture any unreadable/overflowing state.
+
+Stop on a failure or unexpected signing/payment prompt and report the case, visible message and public screenshot. Real-wallet acceptance remains BLOCKED until this checklist has actual recorded outcomes; no pass is assumed from these instructions.
+
+### Phase 4 validation, changes and final limits
+
+| Validation | Result |
+| --- | --- |
+| Frontend `npm test`, Node 22.23.4 | **94 passed, 0 failed** |
+| Documentation `npm run check:content` | PASS — 9 pages / 5 internal links |
+| Combined `npm run build:site` | PASS — builds docs and the application together |
+| Publication comparison | **41/41 byte-identical browser responses** |
+| Requested live pages / discovered same-site paths | **6/6 requested pages and 16/16 paths passed** |
+| Read-only settlement evidence | PASS — receipt, three events, 0.45 pUSD, flags |
+| Responsive surface checks | **24/24 passed** within the stated DOM/layout scope |
+| Real wallet extensions | **BLOCKED**, not simulated |
+| Report links and diff checks | PASS |
+
+The report is the only tracked file changed in this phase. Application source, contracts, token configuration, wallet/payment logic and deployment settings were not modified. Unchanged Foundry tests were not rerun here; the prior Phase 3B result of nine passing tests remains historical evidence. Existing nonfatal dependency/build warnings remain documented; none was suppressed.
+
+Local session evidence: `/tmp/setlora-phase4-8n02w7ox/` contains command logs, browser publication digests and flow observations; `/tmp/setlora-phase4-chain-XdOrAc/evidence.json` contains public RPC reads. Unique screenshots were added under the preserved untracked `.playwright-mcp/` directory. These are local artifacts; the observations and manual checklist above are the committed record.
+
+**Remaining blocker:** real-wallet acceptance is not complete. Full screen-reader/real-device coverage and the existing testnet/security limitations also remain. Publication-byte verification is now complete for the audited application build. No push, deployment or financial operation is authorized by this report.
