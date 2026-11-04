@@ -19,6 +19,16 @@ These are **testnet identifiers**, not instructions to deposit real money. Confi
 
 Setlora uses the wallet you explicitly connect. For financial actions, your wallet must authorize token approval and later confirm the batch settlement transaction. Never paste a seed phrase or private key into Setlora, GitHub issues, or a documentation form.
 
+### Switch to Portaldot V3
+
+After you select a wallet on another network, the workspace offers **Switch to Portaldot V3** in its network status panel. Only clicking that button requests a switch, using the wallet you selected. Page load, wallet restoration and payment recovery never switch networks automatically.
+
+The app checks the actual account and network after the request. A successful switch does not reconnect your account, restore an old review, approve tokens or pay anyone. Reconnect explicitly and review the batch again. If account access is missing, grant it through Connect first.
+
+If you cancel, your wallet does not support switching, or another wallet request is pending, follow the displayed guidance. You can always select V3 manually in that wallet and reconnect.
+
+If the wallet reports that V3 is not installed, **Add Portaldot V3 Testnet** opens manual setup instructions. It does **not** call automatic network addition: complete official EVM gas-currency metadata has not been verified. Obtain the current official settings from Portaldot before adding the network in your wallet. The payment token's six decimals must not be assumed to be the gas currency's decimals.
+
 ### EVM versus native addresses
 
 - **EVM `0x...`:** supported by the current batch-payment form.

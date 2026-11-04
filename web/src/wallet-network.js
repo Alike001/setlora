@@ -21,13 +21,17 @@ export function walletState(provider) {
     ++revision; ++sequence;
     if (event === 'disconnect') disconnected = true;
     cancel(disconnected ? 'disconnected' : 'event');
-    for (const subscriber of subscribers) subscriber(event, value);
+    for (const subscriber of [...subscribers]) subscriber(event, value);
   });
   events.forEach((event, index) => provider.on?.(event, handlers[index]));
   const state = {
     subscribe(listener) { subscribers.add(listener); return () => subscribers.delete(listener); },
     assertRevision(expected) {
       if (disposed || disconnected || revision !== expected) throw changed(disposed ? 'disposed' : disconnected ? 'disconnected' : 'event');
+    },
+    invalidate() {
+      if (disposed || disconnected) throw changed(disposed ? 'disposed' : 'disconnected');
+      ++revision; ++sequence; cancel('user-action'); return revision;
     },
     async read() {
       if (disposed || disconnected) throw changed(disposed ? 'disposed' : 'disconnected');
@@ -44,11 +48,13 @@ export function walletState(provider) {
         ]);
         state.assertRevision(epoch);
         if (request !== sequence) throw changed('superseded');
-        if (!Array.isArray(accounts) || !ADDRESS.test(accounts[0] || '')) {
-          throw new Error('No wallet account is authorized. Reconnect your wallet.');
-        }
         if (typeof chain !== 'string' || !/^0x[0-9a-f]+$/i.test(chain)) {
           throw new Error('Wallet network could not be verified. Reconnect before paying.');
+        }
+        if (!Array.isArray(accounts) || !ADDRESS.test(accounts[0] || '')) {
+          throw Object.assign(new Error('No wallet account is authorized. Reconnect your wallet.'), {
+            code: 'WALLET_ACCOUNT_UNAUTHORIZED', chainId: BigInt(chain), revision: epoch,
+          });
         }
         return { address: getAddress(accounts[0]), chainId: BigInt(chain), revision: epoch };
       } finally { pending.delete(rejectRead); }
@@ -68,7 +74,9 @@ export function releaseWalletState(provider) { states.get(provider)?.dispose(); 
 
 export function assertWalletIdentity(identity, chainId, address = null) {
   if (identity.chainId !== BigInt(chainId)) {
-    throw new Error('Wallet is on the wrong network. Select Portaldot V3 Testnet in your wallet, then reconnect.');
+    throw Object.assign(new Error('Wallet is on the wrong network. Select Portaldot V3 Testnet in your wallet, then reconnect.'), {
+      code: 'WALLET_WRONG_NETWORK', chainId: identity.chainId,
+    });
   }
   if (address && identity.address.toLowerCase() !== address.toLowerCase()) {
     throw new Error('Active wallet account changed. Reconnect and review before signing.');

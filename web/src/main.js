@@ -1,6 +1,6 @@
 import './product-shell.js';
 import { ethers } from 'ethers';
-import { TOKEN, RPC, CONTRACT_ADDRESS, CHAIN_ID } from './config.js';
+import { TOKEN, RPC, CONTRACT_ADDRESS, CHAIN_ID, CHAIN_ID_HEX } from './config.js';
 import { validateInvoices, MAX_INVOICES, parseUnitsExact } from './invoice.js';
 import { parseCsv } from './csv.js';
 import { connect, restoreWallet, assertActiveWallet, batchRead, readWallet, checkAlreadySettled, approveExactAmount, sendBatch, verifySettlement, recoverHistoricalSettlement, preflightRecipients, preflightWholeBatch } from './chain.js';
@@ -11,6 +11,7 @@ import { startWalletDiscovery, requestWalletDiscovery, walletChoices } from './w
 import { rememberWallet, forgetWallet, rememberedWallet, findWalletChoice, isWalletStillAuthorized, requestAccountReselection } from './wallet-session.js';
 import { readHistory, addVerifiedHistory, totalHistoryAmount } from './history.js';
 import { walletState, releaseWalletState } from './wallet-network.js';
+import { switchWalletNetwork, explainNetworkSwitchError } from './wallet-network-switch.js';
 
 const $ = id => document.getElementById(id);
 let rows = [{ ...EMPTY_ROW }];
@@ -26,6 +27,10 @@ let connecting = false;
 let connectionVersion = null;
 let connectedProvider = null;
 let stopWalletObservation = null;
+let networkChoice = null; // Selection retained when the wallet is on another chain.
+let networkCanSwitch = false;
+let networkChainMissing = false;
+let switchingNetwork = false;
 let connectedChoice = null; // Exact wallet provider selected by the user.
 const STORAGE_KEY = 'setlora:pending:v2';
 const PREVIOUS_STORAGE_KEY = 'setlora:pending:v1';
@@ -92,6 +97,9 @@ function resetWalletState(message = 'Wallet disconnected. Connect to review acco
   ++sessionVersion;
   forgetWallet(localStorage);
   if (!keepProvider) unlistenWallet();
+  networkCanSwitch = false; networkChainMissing = false;
+  $('network-setup').hidden = true;
+  $('add-network').setAttribute('aria-expanded', 'false');
   session = null; sessionReady = false; review = null; connectedChoice = null;
   historicalVerified = null;
   tokenBalance = 0n; allowance = 0n;
@@ -117,6 +125,11 @@ function showConnectedWallet(address) {
   $('wallet-address').title = address;
 }
 function buttons() {
+  $('network-actions').hidden = !networkChoice || (!networkCanSwitch && !networkChainMissing);
+  $('switch-network').hidden = !networkCanSwitch;
+  $('switch-network').disabled = busy || switchingNetwork;
+  $('add-network').hidden = !networkChainMissing;
+  $('add-network').disabled = busy || switchingNetwork;
   $('add').disabled = busy || rows.length >= MAX_INVOICES;
   $('review').disabled = busy;
   $('approve').disabled = busy || !review || !sessionReady || !session || allowance >= review.total || tokenBalance < review.total || isUnresolved(last);
@@ -457,6 +470,10 @@ function updateTxBox() {
     }
   }
 }
+function hasWrongWalletNetwork(error) {
+  return error?.code === 'WALLET_WRONG_NETWORK'
+    || (error?.code === 'WALLET_ACCOUNT_UNAUTHORIZED' && error.chainId != null && error.chainId !== CHAIN_ID);
+}
 async function assertPaymentWallet(snapshot, version) {
   try {
     await assertActiveWallet(snapshot.wallet, snapshot.address, snapshot.provider);
@@ -464,6 +481,7 @@ async function assertPaymentWallet(snapshot, version) {
   } catch (error) {
     if (activeSession(snapshot, version)) {
       resetWalletState(error?.message || 'Wallet network is unverified. Reconnect before paying.', 'warn', true, true);
+      networkCanSwitch = hasWrongWalletNetwork(error);
       $('connect').textContent = 'Reconnect wallet';
     }
     throw error;
@@ -485,6 +503,12 @@ async function loadBalances(snapshot = session, version = sessionVersion) {
 // Listen ONLY to the chosen wallet; another installed wallet must not
 // invalidate Setlora's current account when its own account changes.
 function onWalletIdentityChanged() {
+  if (switchingNetwork) {
+    sessionReady = false; review = null;
+    renderReviewItems(null); renderRecipientChecks(null); buttons();
+    setMessage($('network-status'), 'Wallet changed during the switch. Waiting to verify the latest account and network…', 'warn');
+    return;
+  }
   // The observer has already invalidated in-flight raw reads. During the
   // permission prompt, connection will read the new identity after it resolves.
   if (connecting && !session && sessionVersion === connectionVersion) {
@@ -501,12 +525,19 @@ function onWalletIdentityChanged() {
   // requests permission, switches a chain, or sends a transaction.
   void walletState(provider).read().then(identity => {
     if (sessionVersion !== version || connectedProvider !== provider) return;
+    networkCanSwitch = identity.chainId !== CHAIN_ID;
+    networkChainMissing = false;
+    buttons();
     setMessage($('network-status'), identity.chainId === CHAIN_ID
       ? 'Portaldot V3 detected. Reconnect your wallet and review before paying.'
       : 'Wallet is on the wrong network. Select Portaldot V3 Testnet in your wallet, then reconnect.', 'warn');
   }).catch(error => {
     if (sessionVersion === version && connectedProvider === provider && error.code !== 'WALLET_STATE_CHANGED') {
-      setMessage($('network-status'), 'Wallet network is unverified. Reconnect before paying.', 'warn');
+      networkCanSwitch = hasWrongWalletNetwork(error);
+      buttons();
+      setMessage($('network-status'), networkCanSwitch
+        ? 'Wallet is on the wrong network and account access is missing. Switch to Portaldot V3, then reconnect.'
+        : 'Wallet network is unverified. Reconnect before paying.', 'warn');
     }
   });
 }
@@ -517,11 +548,12 @@ function onProviderDisconnect() {
 function unlistenWallet() {
   stopWalletObservation?.(); stopWalletObservation = null;
   if (connectedProvider) releaseWalletState(connectedProvider);
-  connectedProvider = null;
+  connectedProvider = null; networkChoice = null;
 }
-function listenWallet(provider) {
+function listenWallet(choice) {
+  const provider = choice.provider;
   unlistenWallet();
-  connectedProvider = provider;
+  connectedProvider = provider; networkChoice = choice;
   stopWalletObservation = walletState(provider).subscribe(event => {
     if (event === 'disconnect') onProviderDisconnect();
     else onWalletIdentityChanged();
@@ -569,7 +601,7 @@ async function connectClick(choice, { selectAccount = false, previousAddress = n
   connectionVersion = version;
   setBusy(true);
   try {
-    listenWallet(choice.provider);
+    listenWallet(choice);
     // Only a direct Switch account click requests a new account selection.
     // Selecting a wallet provider normally does not re-prompt permissions.
     if (selectAccount) await requestAccountReselection(choice.provider);
@@ -602,8 +634,12 @@ async function connectClick(choice, { selectAccount = false, previousAddress = n
     if (ownsSavedTransaction() && last?.hash) await checkTxClick();
   } catch (error) {
     if (sessionVersion === version) {
-      resetWalletState('Connection unsuccessful. No payment can be submitted.', 'warn');
-      showError(error, $('network-status'));
+      const wrongNetwork = hasWrongWalletNetwork(error);
+      resetWalletState('Connection unsuccessful. No payment can be submitted.', 'warn', false, wrongNetwork);
+      networkCanSwitch = wrongNetwork;
+      if (wrongNetwork && error.code === 'WALLET_ACCOUNT_UNAUTHORIZED') {
+        setMessage($('network-status'), 'Wallet is on the wrong network and account access is missing. Switch to Portaldot V3, then reconnect.', 'warn');
+      } else showError(error, $('network-status'));
     }
   } finally {
     connecting = false;
@@ -831,11 +867,22 @@ async function tryRestoreWallet() {
   setMessage($('network-status'), 'Checking your previously connected wallet…');
   setBusy(true);
   try {
-    listenWallet(choice.provider);
+    listenWallet(choice);
     if (!(await isWalletStillAuthorized(choice.provider, remembered, CHAIN_ID))) {
       // The user changed account, revoked access, or switched network.
       forgetWallet(localStorage);
       setMessage($('network-status'), 'Wallet access or network changed. Connect a wallet to continue.', 'muted');
+      try {
+        const identity = await walletState(choice.provider).read();
+        if (sessionVersion !== version || connectedProvider !== choice.provider) return;
+        networkCanSwitch = identity.chainId !== CHAIN_ID;
+        if (networkCanSwitch) setMessage($('network-status'), 'Wallet is on the wrong network. Use Switch to Portaldot V3 or select it manually.', 'warn');
+      } catch (error) {
+        if (sessionVersion === version && connectedProvider === choice.provider && hasWrongWalletNetwork(error)) {
+          networkCanSwitch = true;
+          setMessage($('network-status'), 'Wallet is on the wrong network and account access is missing. Switch to Portaldot V3, then reconnect.', 'warn');
+        }
+      }
       return;
     }
     if (sessionVersion !== version) return;
@@ -876,6 +923,43 @@ async function tryRestoreWallet() {
     setBusy(false);
   }
 }
+async function switchNetworkClick() {
+  if (busy || switchingNetwork || !networkCanSwitch || !networkChoice) return;
+  const choice = networkChoice, provider = choice.provider;
+  resetWalletState('Confirm the network switch in your selected wallet. Payment is disabled.', 'warn', false, true);
+  networkCanSwitch = true;
+  const version = sessionVersion;
+  switchingNetwork = true; setBusy(true);
+  try {
+    const result = await switchWalletNetwork(provider, CHAIN_ID_HEX);
+    if (sessionVersion !== version || networkChoice !== choice || connectedProvider !== provider) return;
+    walletState(provider).assertRevision(result.revision);
+    networkCanSwitch = false;
+    setMessage($('network-status'), result.status === 'needs-account'
+      ? 'Portaldot V3 is selected, but no account is authorized. Reconnect your wallet to grant account access, then review again.'
+      : 'Switched to Portaldot V3. Reconnect the current wallet account and review your batch again before paying.', result.status === 'needs-account' ? 'warn' : 'good');
+    $('connect').textContent = 'Reconnect wallet';
+  } catch (error) {
+    if (sessionVersion !== version || networkChoice !== choice || connectedProvider !== provider) return;
+    const feedback = explainNetworkSwitchError(error);
+    networkCanSwitch = feedback.kind !== 'disconnected';
+    networkChainMissing = feedback.kind === 'unknown-chain';
+    setMessage($('network-status'), feedback.message, 'warn');
+  } finally {
+    switchingNetwork = false; setBusy(false);
+  }
+}
+$('switch-network').addEventListener('click', switchNetworkClick);
+$('add-network').addEventListener('click', () => {
+  if (busy || !networkChoice || !networkChainMissing) return;
+  // Complete official EVM gas-currency metadata is not verified. This action
+  // opens instructions only; it must never call wallet_addEthereumChain.
+  $('network-setup').hidden = false;
+  $('add-network').setAttribute('aria-expanded', 'true');
+  $('network-setup').focus();
+});
+$('network-setup-chain').textContent = `${CHAIN_ID} (${CHAIN_ID_HEX})`;
+$('network-setup-rpc').textContent = RPC;
 $('connect').addEventListener('click', showWalletPicker);
 $('close-wallet-picker').addEventListener('click', () => $('wallet-picker').close());
 startWalletDiscovery(() => {

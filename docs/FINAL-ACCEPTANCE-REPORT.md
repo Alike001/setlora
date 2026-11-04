@@ -2,11 +2,11 @@
 
 ## Recommendation
 
-**CONDITIONAL GO for a wallet-free Portaldot V3 testnet hackathon walkthrough.** Phase 4 verifies the published application bytes and live settlement evidence. Full real-wallet acceptance remains **BLOCKED** because no usable wallet extension/provider is available in the audit browser. Week 2 check-in is submitted; this is preparation for the final release, not a new check-in. No mainnet or real-money readiness is claimed.
+**CONDITIONAL GO for a wallet-free Portaldot V3 testnet hackathon walkthrough.** Phase 4 verifies the earlier published application bytes and live settlement evidence. The later user-initiated network-switch feature is tested locally only; it has not been pushed or deployed. Full real-wallet acceptance remains **BLOCKED** because no usable wallet extension/provider is available in the audit browser. Week 2 check-in is submitted; this is preparation for the final release, not a new check-in. No mainnet or real-money readiness is claimed.
 
 Conditions before calling the full wallet-connected final release accepted:
 
-1. Complete a real browser-wallet smoke matrix for the Phase 3B fix. F05 code is fixed and its published bundle matches the verified local build; real-extension acceptance remains pending. Current evidence for wallet interaction is synthetic, not a MetaMask/Rabby extension certification.
+1. Complete a real browser-wallet smoke matrix for the Phase 3B fix and the user-initiated network-switch feature described below. F05 code is fixed and its published bundle matches the verified local build; real-extension acceptance remains pending. Current evidence for wallet interaction is synthetic, not a MetaMask/Rabby extension certification.
 2. Keep the real-wallet results distinct from publication evidence. Phase 4 confirms that the published application matches the build from `76eaccc53d2d450df94f969bd5dbb88e2f09e2ea`; any later application change needs a new authorized publication and verification. This audit itself did not push or deploy.
 3. Retain the testnet-only limitations and unknown-transaction recovery guidance. Further security work remains necessary before any mainnet consideration.
 
@@ -419,3 +419,65 @@ The report is the only tracked file changed in this phase. Application source, c
 Local session evidence: `/tmp/setlora-phase4-8n02w7ox/` contains command logs, browser publication digests and flow observations; `/tmp/setlora-phase4-chain-XdOrAc/evidence.json` contains public RPC reads. Unique screenshots were added under the preserved untracked `.playwright-mcp/` directory. These are local artifacts; the observations and manual checklist above are the committed record.
 
 **Remaining blocker:** real-wallet acceptance is not complete. Full screen-reader/real-device coverage and the existing testnet/security limitations also remain. Publication-byte verification is now complete for the audited application build. No push, deployment or financial operation is authorized by this report.
+
+
+## User-initiated network switching — local acceptance
+
+Starting branch/HEAD: `main`, `da3faccaaca2b9fd4be4e79ef662c9ae881fec64`. This section supersedes earlier instructions that require every network change to happen manually inside the wallet. Switching is now available through an explicit application button; automatic switching remains prohibited. Earlier live publication and blockchain checks above are historical evidence, not evidence that this new feature is published. No fresh blockchain verification was required or claimed for this change.
+
+### Behavior and safety
+
+Selecting or restoring a wallet on a verified wrong network exposes **Switch to Portaldot V3** in the existing network status panel. Only clicking it calls `wallet_switchEthereumChain`, on the exact selected provider, with `CHAIN_ID_HEX` from the unchanged configuration (`0x190f1ca9`, decimal `420420777`). Page load, silent restoration, recovery, and connection do not request a switch.
+
+The existing event-revision and latest-read protections remain in place. A switch explicitly invalidates old reviewed signers even if a wallet emits no event. A per-provider lock prevents repeated clicks from queueing requests and remains active through fresh account/chain verification. Disconnect cancels local processing, and a late response cannot resurrect a disconnected session. Listener notification uses a subscriber snapshot so disposal by one listener cannot suppress another listener's disconnect notification. Bounded retries handle identity events during verification; older RPC results cannot override the latest identity. The UI checks the verified revision again before applying a successful result.
+
+Approval and settlement stay disabled throughout switching. The app reads actual `eth_accounts` and `eth_chainId` after the wallet responds; a null switch response alone is not success. A successful switch requires explicit reconnection and a fresh review before any financial action. Missing account permission is reported separately and never triggers an implicit account-access prompt. Pending transaction records remain unchanged. Approval, settlement, evidence verification, token/deployment constants and contracts were not modified.
+
+Error feedback distinguishes cancellation (`4001`), unsupported methods (`4200`, `-32601`), another pending request (`-32002`), missing network (`4902`), disconnect, genuine wrong chain and unresolved identity. Users may select the network manually and reconnect. No automatic retry, financial signature or payment follows a network-switch request.
+
+### Missing-chain metadata boundary
+
+For `4902`, **Add Portaldot V3 Testnet** opens focused manual instructions; it makes **no wallet request**. The configured chain ID and existing Setlora RPC are displayed. Complete official EVM gas-currency name, symbol and decimals could not be verified from accessible official sources during this work. Therefore `wallet_addEthereumChain` is deliberately not invoked, and no metadata is guessed. The payment token's six decimals are not assumed to be gas-currency decimals.
+
+The instructions direct users to obtain current official EVM settings from Portaldot's organizers/documentation, confirm every field in their selected wallet, then return, switch, reconnect and review. Automatic addition remains unavailable until the complete official metadata is verified. The switch API behavior was checked against the [MetaMask switch-chain reference](https://github.com/MetaMask/metamask-docs/blob/main/metamask-connect/evm/reference/json-rpc-api/wallet_switchEthereumChain.mdx); this is API documentation, not evidence of Portaldot currency metadata.
+
+### New regression coverage and validation
+
+All wallet results here use deterministic **synthetic providers**, not installed extensions. The new browser harness announces two EIP-6963 wallets and intentionally sets the other provider as `window.ethereum`, proving that the selected provider receives the request. All financial and automatic add-chain methods are forbidden in this harness.
+
+| Validation | Result |
+| --- | --- |
+| Frontend `npm ci` / `npm test`, Node 22.23.4 | PASS — **111 tests, 0 failures**, including **17 new network-switch tests** |
+| Existing network browser regression | PASS — **24 assertions** |
+| Existing transaction-safety browser regression | PASS — **21 assertions**, synthetic boundaries only |
+| Existing UI/CSV browser regression | PASS — **7 assertions** |
+| New switch browser regression | PASS — **31 assertions**, no runtime errors |
+| Standalone frontend production build | PASS; final source also built by the combined build |
+| Documentation `npm ci`, `npm run check:content`, `npm run build` | PASS — **9 MDX pages / 5 internal links** checked |
+| Combined `npm run build:site` | PASS — application and documentation coexist in `web/dist` |
+| Required combined output checks | PASS — **9 nonempty HTML files**, listed below |
+| `forge test -vv` / `forge build` | PASS — **9 tests, 0 failures**; unchanged contracts |
+| `git diff --check` | PASS |
+| Real MetaMask/Rabby extension acceptance | **BLOCKED / not performed** — synthetic results do not certify real wallets |
+
+New unit coverage includes exact provider/payload, invalidating an old signer without events, cancellation, unsupported methods, missing chain without automatic addition, pending requests, double clicks, locking during verification, disconnect with listener disposal, changed account, missing account access, false-success responses, wrong-chain/missing-account combination, late stale responses after rapid events, malformed chain data, nested wallet error codes, and rejecting results after a later identity event.
+
+The new browser regression checks explicit-click-only behavior; selected-provider targeting; rapid events and repeated clicks; disabled payments; error messages; manual setup; account-access recovery; refresh/restoration; preserved pending recovery; review invalidation; genuine wrong-chain rejection; and no financial/add-chain requests. All **83 browser assertions** across the four harnesses passed after the final code change.
+
+The switch controls and expanded manual instructions were rendered at **390px, 768px and 1440px**. At each width the document width matched the viewport, buttons stayed within the viewport and screenshots were visually inspected. Existing network regression also checked populated review and connection/error states at all three widths. This is Chromium viewport emulation, not physical-device or screen-reader certification. CSS changes are scoped to the new network-status actions/manual panel.
+
+Nonempty combined outputs checked: `web/dist/index.html`, `app.html`, `proof.html`, `native.html`, `docs/index.html`, `docs/how-to-test/index.html`, `docs/send-payments/index.html`, `docs/verify-payment/index.html`, and `docs/check-recipient/index.html` (all paths relative to `web/dist` after the first).
+
+Both dependency installations reported **zero known npm audit vulnerabilities** at this run. Existing warnings remain visible: deprecated `node-domexception` / older `@substrate/connect`; removed Rollup PURE annotation in a dependency; large native-checker bundle; empty optional documentation `i18n` collection and missing custom 404 content; and Foundry call-loop, revert-loop and reentrancy/event lint notices. They did not fail the builds. The contract sets its reentrancy guard before external calls and has a passing malicious-token regression; those facts do not constitute an independent security audit or dismiss all security risk.
+
+### Remaining real-wallet acceptance and recommendation
+
+In actual MetaMask and Rabby (where available), record extension/browser versions and public screenshots. Use testnet only; do not approve, sign or send payments:
+
+1. Select the intended wallet on another already-configured EVM network. Confirm the wrong-network message and Switch button. No switch prompt should appear until clicking it; another installed wallet must receive no request.
+2. Click Switch and reject once, then retry and accept only the network change. Check clear rejection feedback, disabled payment buttons during the request, latest actual V3 account/chain afterward, and the explicit reconnect/fresh-review requirement.
+3. Change accounts and rapidly change chains while the switch/verification is pending. Disconnect during a request and check that a late response never reconnects or revives a review. Return to V3 and reconnect explicitly.
+4. If the wallet lacks V3, check `4902` and the Add action's manual disclosure without an automatic add prompt. Obtain official gas-currency settings before manually installing the network. If the wallet cannot switch or already has another request pending, record the guidance and manually resolve it in that wallet.
+5. Remove site account permission through wallet settings, switch if supported, and confirm that missing permission requires an explicit Connect action. Refresh on a wrong chain and verify no automatic switch. Review only after a fresh connection; preserve any genuine pre-existing pending recovery records.
+
+**Recommendation: CONDITIONAL GO for a locally tested testnet feature; full wallet-connected release acceptance remains blocked on actual extension testing.** This feature is not yet published, so publication must be authorized and reverified separately. Automatic network addition is unavailable pending verified complete official metadata; manual setup is the supported fallback. Wallet requests that never resolve require the user to finish/dismiss them in the wallet or reload; the app does not bypass a pending request or automatically retry. Provider honesty, device accessibility, RPC availability and the previously documented security/testnet limitations remain. No push, deployment, private-key access, signature or blockchain transaction occurred in this work.

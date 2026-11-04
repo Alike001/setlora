@@ -46,7 +46,23 @@
         <div><div class="eyebrow">PAYMENTS / NEW BATCH</div><h1>Pay your people, <span>with confidence.</span></h1><p>Build a batch, check the details, and approve only when you are ready. Your wallet stays in your control.</p></div>
         <div class="page-intro-aside"><span class="aside-label">SETTLEMENT MODEL</span><strong>All or nothing</strong><span>If any transfer fails, the entire batch reverts.</span></div>
       </section>
-      <div class="preview-note" role="note"><span class="preview-note-icon">i</span><div><strong>Portaldot V3 Testnet</strong><span id="network-status" class="network-message" aria-live="polite">Checking contract configuration…</span></div></div>
+      <div class="preview-note" role="note"><span class="preview-note-icon">i</span><div><strong>Portaldot V3 Testnet</strong><span id="network-status" class="network-message" aria-live="polite">Checking contract configuration…</span>
+        <div id="network-actions" class="network-actions" hidden>
+          <button type="button" class="button secondary" id="switch-network">Switch to Portaldot V3</button>
+          <button type="button" class="button subtle" id="add-network" aria-controls="network-setup" aria-expanded="false" hidden>Add Portaldot V3 Testnet</button>
+        </div>
+        <section id="network-setup" class="network-setup" aria-labelledby="network-setup-title" tabindex="-1" hidden>
+          <h2 id="network-setup-title">Add Portaldot V3 manually</h2>
+          <p>Automatic network addition is unavailable because complete official EVM gas-currency metadata has not been verified. This action makes no wallet request.</p>
+          <ol>
+            <li>Obtain the current official EVM network settings from Portaldot's organizers or documentation, including gas-currency name, symbol and decimals.</li>
+            <li>In your selected wallet's network settings, choose Add network manually and confirm all fields against those official settings.</li>
+            <li>Return here and click Switch to Portaldot V3, then reconnect and review. Do not approve or pay as part of network setup.</li>
+          </ol>
+          <p>Expected network: <strong>Portaldot V3 Testnet</strong><br>Chain ID: <code id="network-setup-chain"></code><br>Existing Setlora EVM RPC: <code id="network-setup-rpc"></code></p>
+          <p>The payment token's six decimals are not evidence of the gas currency's decimals.</p>
+        </section>
+      </div></div>
       <div class="steps-nav" aria-label="Payment steps"><div><span>1</span><strong>Prepare invoices</strong></div><i></i><div><span>2</span><strong>Review & approve</strong></div><i></i><div><span>3</span><strong>Settle & verify</strong></div></div>
       <section class="workspace">
         <div class="panel editor">
@@ -82,6 +98,12 @@
     </main>
   </div>
   <style>
+    /* Network actions stay inside the existing status panel. */
+    .preview-note .network-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .preview-note .network-actions button { max-width: 100%; white-space: normal; }
+    .preview-note .network-setup { min-width: 0; margin-top: 12px; padding: 14px; border: 1px solid #d7e5df; border-radius: 10px; background: #fff; font-size: 13px; line-height: 1.6; }
+    .preview-note .network-setup h2 { margin: 0 0 8px; font-size: 16px; }
+    .preview-note .network-setup code { overflow-wrap: anywhere; }
     .recipient-readiness { display: grid; gap: 8px; margin: 12px 0; }
     .readiness-row { padding: 10px 12px; border: 1px solid #d8e8df; background: #f2faf6; border-radius: 10px; display: grid; gap: 4px; font-size: 12px; }
     .readiness-row strong { font-weight: 650; }
