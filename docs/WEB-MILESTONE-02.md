@@ -1,5 +1,7 @@
 # Setlora milestone 02 — browser app
 
+> **Historical milestone snapshot — not current release status.** This report preserves the implementation state and outstanding checks at that milestone. Its old deployment, payment-integration and other pending tasks are not the current release checklist. Setlora now has recorded Portaldot V3 deployment and three-recipient settlement evidence; the check-in is submitted and under review. See [current status](STATUS.md), [settlement specification](SETTLEMENT-SPEC.md) and [threat model](THREAT-MODEL.md). Historical estimates, where present, are not actual deployment costs.
+
 ## Verified before this milestone
 - Native ↔ EVM account funding path demonstrated on Portaldot V3
 - Native wallet 497.985 tPOT after small test transfer
