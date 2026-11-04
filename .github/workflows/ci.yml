@@ -32,6 +32,57 @@ jobs:
       - name: Build
         run: npm run build
 
+  documentation:
+    name: Documentation and combined site build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          check-latest: true
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            docs-site/package-lock.json
+      - name: Install frontend dependencies
+        working-directory: web
+        run: npm ci
+      - name: Install documentation dependencies
+        working-directory: docs-site
+        run: npm ci
+      - name: Check documentation content
+        working-directory: docs-site
+        run: npm run check:content
+      - name: Build documentation
+        working-directory: docs-site
+        run: npm run build
+      - name: Build combined site
+        working-directory: web
+        run: npm run build:site
+      - name: Verify combined site outputs
+        shell: bash
+        run: |
+          for file in \
+            web/dist/index.html \
+            web/dist/app.html \
+            web/dist/proof.html \
+            web/dist/native.html \
+            web/dist/docs/index.html \
+            web/dist/docs/how-to-test/index.html \
+            web/dist/docs/send-payments/index.html \
+            web/dist/docs/verify-payment/index.html \
+            web/dist/docs/check-recipient/index.html
+          do
+            if [[ ! -s "$file" ]]; then
+              echo "::error file=$file::Required build output is missing or empty"
+              exit 1
+            fi
+            echo "Verified $file"
+          done
+
   contracts:
     name: Foundry contract tests
     runs-on: ubuntu-latest
