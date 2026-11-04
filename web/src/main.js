@@ -281,7 +281,7 @@ function renderRows() {
 function setBusy(value) {
   busy = value; buttons();
   document.querySelectorAll('#history-list button').forEach(el=>{ el.disabled=value; });
-  document.querySelectorAll('#invoice-rows input, #invoice-rows button.delete, #csvfile, #download-template').forEach(el => { el.disabled = value; });
+  document.querySelectorAll('#invoice-rows input, #invoice-rows button.delete, #csvfile, #import-csv, #download-template').forEach(el => { el.disabled = value; });
 }
 function showError(e, el = $('review-status')) {
   const message = e?.shortMessage || e?.reason || e?.message || String(e);
@@ -616,7 +616,10 @@ async function reviewClick() {
       review = null;
       renderReviewItems(batch);
       setMessage($('review-status'), 'Invoice preview is valid. Choose a wallet to check the payment on-chain.', 'warn');
-      if (!connecting && !attemptingRestore) showWalletPicker();
+      if (!connecting && !attemptingRestore) {
+        setBusy(false);
+        showWalletPicker();
+      }
       return;
     }
     if (!sessionReady) {
@@ -928,6 +931,9 @@ $('confirm-clear-draft').addEventListener('click', () => {
   $('clear-draft').focus();
 });
 $('add').addEventListener('click', () => { if (rows.length < MAX_INVOICES) { rows.push({ ...EMPTY_ROW }); renderRows(); resetReview(); persistDraft(); } });
+$('import-csv').addEventListener('click', () => {
+  if (!busy) $('csvfile').click();
+});
 $('csvfile').addEventListener('change', async e => {
   try { const file=e.target.files?.[0]; if (!file) return; if (file.size > 150000) throw new Error('CSV must be smaller than 150 KB');
     rows = parseCsv(await file.text()); renderRows(); resetReview(); persistDraft(); }
