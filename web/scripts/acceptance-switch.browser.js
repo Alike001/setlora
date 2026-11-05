@@ -12,7 +12,7 @@ async (page) => {
     s.emit=(event,value)=>[...s.listeners[event]||[]].forEach(fn=>fn(value));
     const selected={
       request:async({method,params})=>{
-        s.calls.push({method,params});
+        s.calls.push({method,params,chain:method==='eth_chainId'?s.chain:undefined});
         if(method==='eth_chainId')return s.chain;
         if(method==='eth_accounts')return s.authorized?[s.account]:[];
         if(method==='eth_requestAccounts'){s.authorized=true;return[s.account];}
@@ -79,6 +79,11 @@ async (page) => {
     await p.evaluate(()=>{const s=window.__switch;s.account='0x2222222222222222222222222222222222222222';s.emit('accountsChanged',[s.account]);s.chain='0x1';s.emit('chainChanged','0x1');s.chain='0x190f1ca9';s.emit('chainChanged',s.chain);s.resolve();});await idle();
     check('Success verifies latest account/network and requires reconnect', (await p.locator('#network-status').innerText()).includes('Portaldot V3 detected. Reconnect your wallet to continue')&&await p.locator('#wallet-menu').isHidden()&&await p.locator('#settle').isDisabled());
     check('Post-switch verification queried fresh selected-wallet identity',await p.evaluate(()=>window.__switch.calls.filter(c=>c.method==='eth_chainId').length>=3));
+    check('Switch and fresh V3 read use the selected EIP-6963 object, not window.ethereum',await p.evaluate(()=>{
+      const s=window.__switch,index=s.calls.findIndex(c=>c.method==='wallet_switchEthereumChain');
+      const after=s.calls.slice(index+1).find(c=>c.method==='eth_chainId');
+      return s.otherCalls.length===0&&after?.chain==='0x190f1ca9';
+    }));
     check('Switch preserves pending recovery information',await p.evaluate(()=>localStorage.getItem('setlora:pending:v2')===localStorage.getItem('test-switch-recovery')));
     await choose();
     check('Explicit reconnect uses changed account',await p.locator('#wallet-address').getAttribute('title')==='0x2222222222222222222222222222222222222222');

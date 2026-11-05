@@ -2,19 +2,19 @@
 
 ## Recommendation
 
-**CONDITIONAL GO for a wallet-free Portaldot V3 testnet hackathon walkthrough.** Phase 4 verifies the earlier published application bytes and live settlement evidence. The later user-initiated network-switch feature is tested locally only; it has not been pushed or deployed. Full real-wallet acceptance remains **BLOCKED** because no usable wallet extension/provider is available in the audit browser. Week 2 check-in is submitted; this is preparation for the final release, not a new check-in. No mainnet or real-money readiness is claimed.
+**GO for the locally prepared Portaldot V3 testnet submission within the exercised scope; publication remains pending.** The user has completed the real MetaMask smoke checks recorded in the November 5 release-preparation section below. This supersedes earlier statements that no real wallet was available or that these specific checks were blocked. Automated regressions also pass. This is preparation for the final release, not a new check-in; no mainnet or real-money readiness is claimed.
 
-Conditions before calling the full wallet-connected final release accepted:
+Remaining release conditions and evidence limits:
 
-1. Complete a real browser-wallet smoke matrix for the Phase 3B fix and the user-initiated network-switch feature described below. F05 code is fixed and its published bundle matches the verified local build; real-extension acceptance remains pending. Current evidence for wallet interaction is synthetic, not a MetaMask/Rabby extension certification.
-2. Keep the real-wallet results distinct from publication evidence. Phase 4 confirms that the published application matches the build from `76eaccc53d2d450df94f969bd5dbb88e2f09e2ea`; any later application change needs a new authorized publication and verification. This audit itself did not push or deploy.
-3. Retain the testnet-only limitations and unknown-transaction recovery guidance. Further security work remains necessary before any mainnet consideration.
+1. Publication and verification of the final production build are still pending separate authorization. Phase 4 verified the published application against `76eaccc53d2d450df94f969bd5dbb88e2f09e2ea`; it does not establish publication of the later local wallet changes.
+2. The real-wallet evidence is the user's manual report, distinct from automated synthetic-provider tests. It covers successful switching, reconnect, account-change invalidation, fresh readiness, disconnect and draft restoration. It does not certify every extension/browser, cancellation/pending-request flow, rapid chain changes or a second installed wallet. Browser/MetaMask versions and the exact manually tested URL/build were not supplied, so the manual run is not production-byte verification.
+3. Retain testnet-only limitations and unknown-transaction recovery guidance. No new real token approval, signature, payment or contract deployment was part of this release preparation. Further security work remains necessary before any mainnet consideration.
 
-No unsafe broadcast or false chain confirmation was observed in the exercised scenarios. That is bounded evidence, not an independent security audit or exhaustive verification. Phase 3B closes the reproduced F05 defect in code, and Phase 4 verifies its published bytes. The full wallet-connected release remains conditional on real wallet-extension acceptance and the explicitly untested scenarios below; a passing mock is not a real-extension result.
+No unsafe broadcast or false chain confirmation was observed in the exercised automated scenarios. That is bounded evidence, not an independent security audit or exhaustive verification. Historical sections below retain their original results and pending statements; the November 5 section is the current disposition.
 
 ## Scope and evidence boundaries
 
-- Audit date: **November 4, 2026**.
+- Initial audit date: **November 4, 2026**; final release-preparation update: **November 5, 2026**.
 - Phase 3 starting branch/HEAD: `main`, `547c59cb5130cabb5d6705d7ca818b9580ac6a30`; Phase 3B starts from acceptance commit `dae19a5c43c15bbc33a9f72361db5013cea6bfe2`; Phase 4 audits `76eaccc53d2d450df94f969bd5dbb88e2f09e2ea`.
 - Acceptance criteria: the Phase 3 request; implementation references: [current status](STATUS.md), [settlement specification](SETTLEMENT-SPEC.md), [threat model](THREAT-MODEL.md), application source and existing frontend/Foundry tests.
 - Local validation runtime: **Node.js 22.23.4**, Foundry 1.8.5. Documentation requires a supported Node patch; an earlier Phase 2 run established that Node 22.23.3 is insufficient.
@@ -22,7 +22,7 @@ No unsafe broadcast or false chain confirmation was observed in the exercised sc
 - No private keys, seed phrases or wallet-backup contents were accessed. Existing untracked files, receipts, scripts and historical documents were preserved.
 - No token approval, signature, new blockchain transaction, replacement payment, push or deployment occurred. Synthetic approval/settlement functions in an isolated browser context exercised UI state only. Other wallet mocks rejected signing/sending methods; real chain access was read-only.
 
-Evidence labels used below: **unit** means a local automated helper/contract test; **browser mock** means application interaction against synthetic providers or API boundaries; **live read** means fresh public RPC/site evidence. Passing a mock does not establish production-wallet behavior.
+Evidence labels used below: **unit** means a local automated helper/contract test; **browser mock** means application interaction against synthetic providers or API boundaries; **live read** means fresh public RPC/site evidence. **Manual observation** means a user-reported real MetaMask/browser check, not an automated result or independent rerun. Passing a mock does not establish production-wallet behavior.
 
 ## Confirmed defects and disposition
 
@@ -556,3 +556,57 @@ An initial added disconnect/reconnect test attempted to click Connect after its 
 **CONDITIONAL GO remains limited to the locally tested testnet application.** In the actual MetaMask version/browser used by the reporter, record versions, actual active network, public app status and extension behavior. Test wrong-chain selection, explicit Switch, cancellation, pending requests, account changes, rapid chain changes, and success followed by explicit reconnect and Review only. Separately test an already-correct chain (no switch request expected), disconnect on both networks (neutral guidance, no automatic reconnect), and another installed wallet receiving no request. If the extension opens its home screen, inspect its pending requests and actual selected network; do not infer success or failure from the screen alone. Account access/network changes are the only permitted confirmations for this checklist: do not approve tokens, sign financial requests or settle payments.
 
 Real-extension acceptance of the revised flow remains pending. These changes are local and require separately authorized publication and production verification. Requests that never resolve still require the user to finish/dismiss them in the actual wallet or reload; no timeout automatically authorizes or resends anything. No push, deployment, private-key access, signature, token approval or blockchain transaction occurred in this work. Unrelated untracked files, backups and deployment evidence were preserved.
+
+
+## Final release preparation — November 5, 2026
+
+Starting branch/HEAD: `main`, `f260506` (three commits ahead of `origin/main`). This pass reviews the six modified tracked files and untracked `web/src/wallet-diagnostics.js`, records the user's completed real-wallet checks, and validates the intended release changes. No new application functionality is added.
+
+### Real-wallet evidence — manual observations supplied by the user
+
+These checks were completed with real MetaMask on Portaldot V3 Testnet and reported in the release-preparation request. They were not performed by the automated browser harness or independently repeated during this pass. The exact test time, browser/extension versions and URL/build were not supplied.
+
+| Manual check | Reported result | Evidence boundary |
+| --- | --- | --- |
+| Provider chain identity | PASS — MetaMask returned `0x190f1ca9` (`420420777`). | Actual provider result reported by the user; separate from mocked RPC results. |
+| Explicit network switch | PASS — switching from Base Sepolia to Portaldot V3 worked. | Successful real-wallet path; no claim about rejection or pending-request behavior. |
+| Wallet reconnection | PASS — reconnection succeeded. | No automatic restoration of a prior payment review is inferred. |
+| Account change | PASS — changing from Account 1 to Account 2 invalidated the previous payment review. | Public account addresses are unnecessary and are not recorded here. |
+| Fresh recipient/payment checks | PASS — fresh recipient and payment readiness checks worked under Account 2. | Readiness is not proof that a payment was signed, sent or settled. |
+| Disconnect | PASS — disconnect removed payment readiness. | Does not certify every wallet's permission-revocation implementation. |
+| Saved draft | PASS — invoice **#2002**, **0.05 pUSD**, restored after reconnection and browser refresh. | Browser-local draft restoration; not an on-chain paid-invoice claim. |
+| Public RPC connectivity | PASS — the Portaldot RPC hostname resolved and JSON-RPC `eth_chainId` succeeded. | User-reported point-in-time network check; no availability guarantee. |
+
+These observations close the specific real-wallet smoke-check gap for the successful exercised paths. Other historical manual-matrix items remain outside this evidence, including rejection, unresolved native prompts, rapid chain changes and another installed wallet. No real token approval, signature or payment is claimed as new acceptance evidence.
+
+### Diagnostic review and final scope
+
+The three proposed runtime edits (`main.js`, `wallet-network.js`, `wallet-network-switch.js`) only added diagnostics; they did not correct an established wallet defect. The helper used a page-local WeakMap identifier, bounded wallet name, chain IDs and allowlisted result labels. It omitted account addresses, raw RPC payloads, params and error contents and had no persistence or remote telemetry. The proposed diagnostic tests inspected provider identity and omission of sensitive payloads, but those tests are not counted as release validation below. Always-on console output is unnecessary after the real-wallet investigation, so all three runtime files were restored to starting HEAD and the diagnostic module is excluded from the commit. The existing untracked module is preserved locally, unreferenced and absent from the production bundle.
+
+Retained changes are two behavioral unit regressions, one additional synthetic-browser assertion with chain-read instrumentation, and this report. The unit tests check fresh reads despite stale provider properties, selected-provider isolation through readiness, and rejection of a different provider or silently changed account/chain. The browser assertion checks that the selected EIP-6963 provider supplies a fresh V3 chain read after switching while `window.ethereum` points at another provider. The harness retains its synthetic **Target Wallet** name and does not override `console.debug`, so it neither impersonates real MetaMask evidence nor suppresses console diagnostics.
+
+Every tracked file under `web/src` and `contracts` was compared byte-for-byte with starting HEAD and is unchanged. This includes wallet guards, token/chain/RPC configuration, payment encoding, approval/settlement implementation, receipt/event/calldata verification and recovery. The production bundle retains the configured contract **`0x2d17199920251f7eec8a555043c8387194ff5d1b`**, chain **420420777**, pUSD token **`0x00001E6100000000000000000000000000010000`** and RPC **`https://test-evm-rpc-v3.portaldot.dev`**. No environment file was edited. No wallet diagnostic imports or `[Setlora wallet]` prefix appear in the production JavaScript. Final changes contain synthetic public fixtures and the user-supplied invoice/amount only; no keys, seeds, backup contents or personal wallet addresses were added.
+
+### Automated validation of the final release candidate
+
+Runtime for this pass: **Node.js 24.14.1**, **Foundry 1.8.5**. These are fresh local results, separate from earlier Node 22 runs and from the manual observations above.
+
+| Check | Result |
+| --- | --- |
+| Frontend `npm test` in `web` | **121 passed, 0 failed** |
+| Switch browser acceptance | **45 assertions passed** |
+| Selection browser acceptance | **28 assertions passed** |
+| Network browser acceptance | **24 assertions passed** |
+| Safety browser acceptance | **21 assertions passed** |
+| UI browser acceptance | **7 assertions passed** |
+| Documentation `npm run check:content` | PASS — **9 MDX pages / 5 internal links** |
+| Combined production `npm run build:site` in `web` | PASS — documentation, frontend and bundled `/docs/` output |
+| Required combined HTML outputs | PASS — all **9** CI-required routes nonempty |
+| Foundry `forge test -vv` / `forge build` | PASS — **9 tests, 0 failures**, build successful |
+| Runtime/contract scope, bundle and diff checks | PASS — source unchanged, existing contract present, diagnostics absent, whitespace clean |
+
+All **125 browser assertions** ran through Playwright against the configured Vite application on port 5174 with deterministic synthetic wallets/RPC responses or isolated payment boundaries. They do not open real wallet financial prompts. Existing network/switch responsive checks pass at **390px, 768px and 1440px**. The combined production output was built and inspected separately; no new deployed-site verification is claimed.
+
+Existing nonfatal warnings remain: documentation optional i18n/custom-404 notices, a dependency annotation warning, large JavaScript chunks and Foundry lint notices. None was suppressed or addressed with speculative contract/wallet changes.
+
+**Remaining release gate:** separately authorized publication and subsequent production verification. Broader extension/manual-matrix coverage and financial execution remain unverified as described above; there is no failing local release check. No push, deployment, token approval, signature or blockchain transaction occurred in this pass. Unrelated untracked files, deployment evidence, backups and `.thoughts` files were preserved and excluded from staging.

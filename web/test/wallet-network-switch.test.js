@@ -46,6 +46,20 @@ test('explicit switch targets only the supplied provider and verifies actual acc
   assert.ok(selected.calls.every(c=>['wallet_switchEthereumChain','eth_accounts','eth_chainId'].includes(c.method)));
 });
 
+test('fresh switch reads and readiness use only the supplied provider despite stale chain properties', async t=>{
+  const selected=setup(t), other=setup(t);
+  selected.chainId=HEX;other.chain=HEX;
+  await switchWalletNetwork(selected,HEX);
+  assert.deepEqual(selected.calls.map(c=>c.method),[
+    'eth_accounts','eth_chainId','wallet_switchEthereumChain','eth_accounts','eth_chainId',
+  ]);
+  const next=await verifiedWallet(selected,CHAIN);t.after(()=>next.wallet.destroy());
+  await verifiedSigner(next.wallet,A,selected,CHAIN);
+  assert.equal(other.calls.length,0);
+  assert.equal(next.address,A);
+  assert.ok(selected.calls.every(c=>['eth_accounts','eth_chainId','wallet_switchEthereumChain'].includes(c.method)));
+});
+
 test('switch invalidates a prior reviewed signer even when the wallet emits no event', async t=>{
   const p=setup(t);p.chain=HEX;const old=await verifiedWallet(p,CHAIN);t.after(()=>old.wallet.destroy());
   p.emitSwitch=false;await switchWalletNetwork(p,HEX);

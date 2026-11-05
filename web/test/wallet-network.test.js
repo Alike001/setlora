@@ -49,6 +49,18 @@ test('fresh verification immediately accepts V3 without switching the network', 
   assert.ok(p.calls.every(c => ['eth_accounts', 'eth_chainId'].includes(c.method)));
 });
 
+test('readiness rejects a different injected provider and a silently changed account or chain', async t => {
+  const selected=mock(),other=mock();
+  const next=await verifiedWallet(selected,CHAIN);cleanup(t,selected,next.wallet);cleanup(t,other);
+  await assert.rejects(verifiedSigner(next.wallet,A,other,CHAIN),/no longer verified/);
+  assert.equal(other.calls.length,0);
+  selected.account=B;
+  await assert.rejects(verifiedSigner(next.wallet,A,selected,CHAIN),/account changed/);
+  selected.account=A;selected.chain='0x1';
+  await assert.rejects(verifiedSigner(next.wallet,A,selected,CHAIN),e=>e.code==='WALLET_WRONG_NETWORK');
+  assert.ok(!selected.calls.some(c=>/send|sign|requestAccounts/i.test(c.method)));
+});
+
 test('rapid V3/other/V3 events invalidate old responses and accept only the latest read', async t => {
   const p = mock(), state = walletState(p); cleanup(t, p);
   const oldChain = p.hold('eth_chainId');
