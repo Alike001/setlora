@@ -2,16 +2,17 @@
 
 **Invoice-aware batch payments with verifiable receipts on Portaldot V3 Testnet.**
 
-Setlora helps teams pay contributors without juggling separate transfers, spreadsheets and screenshots. A payer attaches invoice numbers to payments, reviews the batch and signs one atomic settlement to several EVM recipients. Public chain evidence supports checking the result independently of the payer's browser.
+Setlora lets individuals, teams and organizations pay multiple EVM recipients—such as freelancers, suppliers, contractors and contributors—in one invoice-linked transaction instead of repeating wallet transfers and reconciling screenshots. The payer checks amounts and recipients, approves test pUSD when required, signs an atomic batch, and can independently verify settlement against public blockchain evidence.
 
-Built for **Portaldot Hacker House 2026 — Ecosystem DApps**. The check-in has been **submitted and is under review**. Final-release preparation is ongoing.
+Built for **Portaldot Hacker House 2026 — Ecosystem DApps**. The DoraHacks check-in was submitted. The latest reviewed wallet changes and acceptance report were pushed to GitHub on **November 5, 2026**; verification of the newly published Cloudflare build and final-submission materials remains to be completed. No final-review acceptance is claimed.
 
 > **Experimental testnet software. No mainnet support or independent security audit. Do not use real funds.**
 
 ## How to test — Judges
 
 - [Application](https://setlora.pages.dev/) · [Payment workspace](https://setlora.pages.dev/app) · [Wallet-free verifier](https://setlora.pages.dev/proof) · [Native account checker](https://setlora.pages.dev/native)
-- Documentation is intended for **`/docs/`**. Its public deployment has not been verified in this release review; use the [documentation source](docs-site/src/content/docs/index.mdx) or local preview below.
+- [Documentation](https://setlora.pages.dev/docs/) · [Judge walkthrough](https://setlora.pages.dev/docs/how-to-test/) · [Source documentation](docs-site/src/content/docs/index.mdx)
+- The public documentation was accessible in an earlier browser check. Recheck all routes after each new Cloudflare deployment; a successful local build does not itself prove that the current deployed version is live.
 
 ### Without a wallet
 
@@ -23,9 +24,9 @@ Built for **Portaldot Hacker House 2026 — Ecosystem DApps**. The check-in has 
 
 ### With your own EVM wallet
 
-1. Connect a supported browser wallet on Portaldot V3 Testnet, chain ID `420420777`.
+1. Select a supported injected EVM wallet and connect to **Portaldot V3 Testnet**, chain ID `420420777` (`0x190f1ca9`). If the selected wallet is on another chain, use the explicit **Switch to Portaldot V3** action; verify its actual network and reconnect before creating a fresh payment review. Network switching alone never approves a payment. If V3 is not installed, Setlora displays manual setup guidance rather than silently adding a network.
 2. Use new invoice numbers, valid EVM recipients and small test pUSD amounts. Previously settled numbers cannot be reused by the same payer in this contract.
-3. Review the batch and recipient checks. Reviewing does not sign or transfer funds.
+3. Review the batch and recipient checks. Changing accounts, networks or disconnecting invalidates previous readiness; recheck before authorizing. Reviewing does not sign or transfer funds.
 4. Obtain test pUSD and gas tokens before payment. Test-token distribution is coordinated through Portaldot's official channels; no unrestricted public faucet is verified here.
 5. Explicitly approve the token allowance if needed, then separately sign settlement. Verify the receipt before retrying any uncertain transaction.
 
@@ -43,7 +44,7 @@ Never share private keys or seed phrases.
 
 ## Implemented functionality
 
-- Responsive landing page, payment workspace, EVM wallet discovery and account switching.
+- Responsive landing page, payment workspace, EIP-6963 wallet discovery, account switching and explicit selected-wallet network switching with fresh account/chain checks.
 - Invoice validation, CSV import and a maximum of 10 invoices per batch.
 - Wallet/network checks, contract bytecode presence, token identity and six-decimal checks.
 - Recipient simulations, full-batch gas estimation, explicit approval and settlement signatures.
@@ -51,6 +52,24 @@ Never share private keys or seed phrases.
 - Public wallet-free verification and payer-scoped recovery in the payment workspace.
 - Conservative pending/unknown handling, verified receipt export, saved drafts and browser-local payment history.
 - Read-only native account checker and MDX documentation with a combined site build.
+
+## Latest acceptance evidence — November 5, 2026
+
+The release candidate was tested locally and the results were recorded in the [final acceptance report](docs/FINAL-ACCEPTANCE-REPORT.md). These results distinguish **real MetaMask user observations** from **automated tests against synthetic wallet providers**; they are not a security audit or production-byte certification.
+
+| Acceptance check | Result | Scope |
+| --- | --- | --- |
+| Frontend unit tests | **121 passed** | Local automated test suite |
+| Browser assertions | **125 passed** | Synthetic wallet/RPC and isolated transaction-boundary cases |
+| Solidity contract tests | **9 passed** | Foundry mock-token tests; no contract changes |
+| Documentation and combined production build | **Passed** | All nine required combined HTML routes generated locally |
+| Responsive browser checks | **Passed** | Emulated widths of 390, 768 and 1440 pixels |
+| Real MetaMask connection and network switching | **Passed in tested path** | User-observed switch from Base Sepolia to Portaldot V3 (`0x190f1ca9`), followed by reconnect |
+| Account change and payment review invalidation | **Passed in tested path** | Old account readiness disabled; new account required a fresh review |
+| Disconnect, refresh and draft restoration | **Passed in tested path** | Invoice `2002`, `0.05 pUSD`, restored for the previously connected account |
+| Public RPC DNS and chain-ID response | **Passed at test time** | Does not guarantee continuous endpoint availability |
+
+The final manual tests did **not** approve tokens, sign settlement or broadcast new payments. Rejection, pending wallet requests, rapidly changing networks, additional wallet extensions and broader accessibility scenarios are not fully covered by this manual run. The historical paid batch below remains the actual on-chain settlement evidence.
 
 ## Verified testnet deployment and settlement
 
@@ -105,16 +124,19 @@ flowchart TD
 
 The browser application uses EVM RPC reads and a payer-controlled wallet for signatures. `SetloraBatch` has an immutable token, no administrator and no custody account. Token transfers go directly from the payer to recipients using allowance. The public verifier reads chain evidence without a wallet. The native account checker reads the native RPC; it is separate from EVM settlement. Drafts and payment history live in browser storage.
 
-## Status and remaining final-release work
+## Release status and final submission work
 
-The November 2 check-in recorded the implemented payment flow, public verifier, native checker and settlement evidence above. **The check-in is now submitted and under review.** Deployment and pUSD payment integration are implemented and have recorded testnet evidence.
+The **DoraHacks check-in was submitted** and the four reviewed wallet/release commits up through `31f0919` were pushed to GitHub `main` on November 5, 2026. The fixed-token contract is already deployed; the recorded 0.45 pUSD settlement demonstrates real Portaldot V3 EVM activity. This does not mean the final judging submission has been accepted.
 
-Remaining final-release work:
+The remaining release gates are to confirm GitHub Actions passes on the latest commit; verify Cloudflare Pages actually serves that version, including `/docs/`, `/app`, `/proof` and `/native`; recheck the historical settlement in the live verifier; and finalize a public **under-three-minute** demo video, pitch deck and DoraHacks final-submission details. A previous deployment check cannot certify new published bytes.
 
-- Complete a final live-site walkthrough, including application routes and the intended `/docs/` route after publication is verified.
-- Extend wallet and recipient edge-case testing, including pending/unknown recovery and browser/mobile/accessibility checks on the live site.
-- Finish the final submission video, pitch materials and final demonstration.
-- Complete further security review and the testing described in the [threat model](docs/THREAT-MODEL.md) before considering any mainnet work.
+The current supported core product is **EVM-to-EVM invoice-linked pUSD batch payments**. Native SS58 payouts, sponsored onboarding and cross-chain settlement are future work and should not be represented as shipped features. Independent security review and broader wallet/accessibility testing remain necessary for use beyond this limited testnet demonstration.
+
+### Hackathon materials
+
+- [Check-in demonstration video](https://youtu.be/w2XcGtL8P_s) — historical submission material; review or replace it for the final deliverable.
+- [Working pitch deck](https://docs.google.com/presentation/d/1jRV6nafkZbGGEB4qXH48YT2Ytf6yBb7UOgc_XoiaBPo/edit?usp=sharing) — confirm public access and final content before submission.
+- [Final acceptance report](docs/FINAL-ACCEPTANCE-REPORT.md) · [Settlement specification](docs/SETTLEMENT-SPEC.md) · [Threat model](docs/THREAT-MODEL.md).
 
 ## Limitations and safety boundaries
 
@@ -130,7 +152,7 @@ See the [native account research roadmap](docs/NATIVE-ACCOUNTS-ROADMAP.md) for f
 
 ## Local installation and validation
 
-Requirements: **Node.js 22+**, npm and **Foundry**. Run each block from the repository root. No private key is needed for local tests.
+Requirements: **Node.js 22.23.4+ (or a supported Node.js 24 release)**, npm and **Foundry**. Run each block from the repository root. No private key is needed for local tests.
 
 ```sh
 cd web
@@ -161,7 +183,7 @@ cd web
 npm run build:site
 ```
 
-The combined build emits the existing application pages (`index.html`, `app.html`, `proof.html`, `native.html`) and documentation under `web/dist/docs/`. The standalone documentation output is `docs-site/dist/`. Build success does not establish that `/docs/` is publicly deployed. Preserve the public contract environment setting when building a configured app.
+The combined build emits the existing application pages (`index.html`, `app.html`, `proof.html`, `native.html`) and documentation under `web/dist/docs/`. The standalone documentation output is `docs-site/dist/`. The documentation was observed on the public site previously; recheck its latest deployed version after the release. Preserve the public contract environment setting when building a configured app.
 
 ```sh
 cd contracts
@@ -179,6 +201,6 @@ forge build
 | `contracts/src/SetloraBatch.sol` | Fixed-token atomic settlement contract |
 | `contracts/test/SetloraBatch.t.sol` | Nine named local Foundry tests |
 | `docs/` | Current status, settlement spec, threat model, research and historical milestone reports |
-| `.github/workflows/ci.yml` | Frontend and contract CI checks |
+| `.github/workflows/ci.yml` | Frontend, documentation/combined-site and Foundry CI checks |
 
 Please keep private keys, seed phrases and personal payment records out of public issues.
